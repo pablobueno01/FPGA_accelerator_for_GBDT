@@ -6,6 +6,7 @@ import timeit
 import scipy.io
 import numpy as np
 import joblib
+from lightgbm import LGBMClassifier
 
 # Images information
 IMAGES = {
@@ -296,7 +297,7 @@ def lightgbm_predict(trained_model, X_test, y_test, num_iter=200,
 # MAIN FUNCTION
 # =============================================================================
 
-def main():
+def main(load_model=False):
     
     # For each image
     for img in IMAGES:
@@ -314,11 +315,20 @@ def main():
         # Preprocess image
         X, y = pixel_classification_preprocessing(X, y)
         
-        # Get test pixels
-        _, _, X_test, y_test = separate_pixels(X, y, train_size)
+        # Separate data into train and test sets
+        X_train, y_train, X_test, y_test = separate_pixels(X, y, train_size)
         
-        # Load model
-        model = joblib.load("{}_model.joblib".format(image_name))
+        if not load_model:
+            # Train model
+            print("Training model...")
+            model = LGBMClassifier(random_state=69)
+            model.fit(X_train, y_train)
+            
+            # Save trained model
+            joblib.dump(model, "{}_model.joblib".format(image_name))
+        else:
+            # Load trained model
+            model = joblib.load("{}_model.joblib".format(image_name))
         
         # Perform inference
         time, speed, accuracy = lightgbm_predict(model, X_test, y_test)
@@ -328,4 +338,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
