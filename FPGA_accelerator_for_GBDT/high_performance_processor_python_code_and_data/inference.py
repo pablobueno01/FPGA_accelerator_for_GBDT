@@ -7,6 +7,7 @@ import scipy.io
 import numpy as np
 import joblib
 from lightgbm import LGBMClassifier
+import matplotlib.pyplot as plt
 
 # Images information
 IMAGES = {
@@ -294,6 +295,62 @@ def lightgbm_predict(trained_model, X_test, y_test, num_iter=200,
     
     return time, speed, accuracy
 
+def get_normalized_feature_importance(trained_model):
+    """Returns the normalized feature importance with gain criterion.
+    
+    Parameters
+    ----------
+    trained_model:
+        The trained model.
+    
+    Returns
+    -------
+    normalized_importance: NumPy array
+        The normalized feature importance.
+    
+    """
+    # Get feature importance with gain criterion
+    importance = trained_model.feature_importances_
+    
+    # Normalize importance to sum up to 1
+    normalized_importance = importance / np.sum(importance)
+    
+    return normalized_importance
+
+def save_feature_importance(importance, save_path):
+    """Plots a graph of the feature importance and saves it to a file.
+    
+    Parameters
+    ----------
+    importance: NumPy array
+        The normalized feature importance.
+    save_path: str
+        The path to save the plot.
+    
+    """
+    # Create the x-axis values
+    x = np.arange(len(importance))
+    
+    # Create a figure and axis
+    _, ax = plt.subplots()
+    
+    # Create the graph
+    ax.plot(x, importance)
+    
+    # Set the x-axis labels
+    ax.set_xlabel('Feature')
+    ax.set_xticks(x[::10])
+    ax.set_xticklabels(x[::10], rotation=90)  # Rotate the x-axis labels
+    
+    # Set the y-axis label
+    ax.set_ylabel('Importance')
+    
+    # Set the title
+    ax.set_title('Feature Importance')
+    
+    # Save the plot
+    plt.savefig(save_path)
+
 # MAIN FUNCTION
 # =============================================================================
 
@@ -321,7 +378,7 @@ def main(load_model=False):
         if not load_model:
             # Train model
             print("Training model...")
-            model = LGBMClassifier(random_state=69)
+            model = LGBMClassifier(importance_type='gain', random_state=69)
             model.fit(X_train, y_train)
             
             # Save trained model
@@ -332,9 +389,12 @@ def main(load_model=False):
         
         # Perform inference
         time, speed, accuracy = lightgbm_predict(model, X_test, y_test)
-        
         print("Prediction time: {:.3f}s ({}px/s)".format(time, speed))
         print("Test Accuracy:   {:.3f}\n".format(accuracy))
 
+        # Plot feature importance
+        importance = get_normalized_feature_importance(model)
+        save_feature_importance(importance, "{}_importance.png".format(image_name))
+        
 if __name__ == "__main__":
-    main()
+    main(True)
