@@ -394,7 +394,7 @@ def main(load_model=False):
 
         # Plot feature importance
         importance = get_normalized_feature_importance(model)
-        save_feature_importance(importance, "{}_importance.png".format(image_name))
+        save_feature_importance(importance, "feature_importances/{}_importance.png".format(image_name))
         
 if __name__ == "__main__":
     main(True)
