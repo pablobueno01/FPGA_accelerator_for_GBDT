@@ -237,6 +237,36 @@ def separate_pixels(X, y, p):
     
     return X_train, y_train, X_test, y_test
 
+# TRAINING FUNCTIONS
+# =============================================================================
+def obtain_trained_model(X_train, y_train, image_name, load_model=False):
+    """
+    Obtains a trained model for inference.
+
+    Parameters:
+    - X_train (array-like): The input features for training the model.
+    - y_train (array-like): The target labels for training the model.
+    - image_name (str): The name of the image used for training the model.
+    - load_model (bool): Whether to load a pre-trained model or train and save a new one.
+
+    Returns:
+    - model: The trained model for inference.
+    """
+
+    if not load_model:
+        # Train model
+        print("Training model...")
+        model = LGBMClassifier(importance_type='gain', random_state=69)
+        model.fit(X_train, y_train)
+
+        # Save trained model
+        joblib.dump(model, "{}_model.joblib".format(image_name))
+    else:
+        # Load trained model
+        model = joblib.load("{}_model.joblib".format(image_name))
+    
+    return model
+
 # INFERENCE FUNCTIONS
 # =============================================================================
 
@@ -296,6 +326,9 @@ def lightgbm_predict(trained_model, X_test, y_test, num_iter=200,
     
     return time, speed, accuracy
 
+# FEATURE IMPORTANCE FUNCTIONS
+# =============================================================================
+
 def get_normalized_feature_importance(trained_model):
     """Returns the normalized feature importance with gain criterion.
     
@@ -348,6 +381,44 @@ def save_feature_importance_heatmap(importance, save_path):
     plt.ylabel('Row Index')
     plt.savefig(save_path)
 
+def train_reducted_model(importance, X_train, y_train, X_test, y_test, accuracy, th_acc=0.01):
+    """
+    Trains a reduced model by iteratively selecting the most important features based on their importance scores.
+
+    Args:
+        importance (numpy.ndarray): The importance scores of the features.
+        X_train (numpy.ndarray): The training data.
+        y_train (numpy.ndarray): The training labels.
+        X_test (numpy.ndarray): The test data.
+        y_test (numpy.ndarray): The test labels.
+        accuracy (float): The target accuracy to achieve.
+        th_acc (float, optional): The threshold accuracy difference. Defaults to 0.01.
+
+    Returns:
+        tuple: A tuple containing the trained model, the number of selected features, the inference time, 
+            the inference speed, and the achieved accuracy.
+    """
+    most_important_features = np.argsort(importance)[::-1]
+    k = 1
+    accuracy_k = 0
+    while accuracy_k < accuracy - th_acc:
+        if k % 10 == 1:
+            print("Training model with {} to {} features...".format(k, k+9))
+
+        top_k_features = most_important_features[:k]
+        X_train_k = X_train[:, top_k_features]
+        X_test_k = X_test[:, top_k_features]
+
+        new_model = LGBMClassifier(random_state=69)
+        new_model.fit(X_train_k, y_train)
+
+        # Perform inference with the new model
+        time_k, speed_k, accuracy_k = lightgbm_predict(new_model, X_test_k, y_test)
+        k += 1
+
+    k -= 1  # Decrement k by 1 to get the minimum value
+    return new_model, k, time_k, speed_k, accuracy_k
+
 # MAIN FUNCTION
 # =============================================================================
 
@@ -361,7 +432,7 @@ def main(load_model=False):
         image_name = image_info["key"]
         train_size = image_info["p"]
         
-        print("\n{}".format(image_name))
+        print("\n--------{}--------".format(image_name))
         
         # Load image
         X, y = load_image(image_info)
@@ -372,26 +443,24 @@ def main(load_model=False):
         # Separate data into train and test sets
         X_train, y_train, X_test, y_test = separate_pixels(X, y, train_size)
         
-        if not load_model:
-            # Train model
-            print("Training model...")
-            model = LGBMClassifier(importance_type='gain', random_state=69)
-            model.fit(X_train, y_train)
-            
-            # Save trained model
-            joblib.dump(model, "{}_model.joblib".format(image_name))
-        else:
-            # Load trained model
-            model = joblib.load("{}_model.joblib".format(image_name))
+        # Obtain trained model
+        model = obtain_trained_model(X_train, y_train, image_name, load_model)
         
         # Perform inference
         time, speed, accuracy = lightgbm_predict(model, X_test, y_test)
+        print("Full model with {} features:".format(X_train.shape[1]))
         print("Prediction time: {:.3f}s ({}px/s)".format(time, speed))
         print("Test Accuracy:   {:.3f}\n".format(accuracy))
 
-        # Save feature importance graphics
+        # Save feature importance heatmap
         importance = get_normalized_feature_importance(model)
         save_feature_importance_heatmap(importance, "feature_importances/{}_importance.png".format(image_name))
+
+        # Train reduced model and perform inference
+        new_model, k, time_k, speed_k, accuracy_k = train_reducted_model(importance, X_train, y_train, X_test, y_test, accuracy)
+        print("\nFinal model with {} features:".format(k))
+        print("Prediction time: {:.3f}s ({}px/s)".format(time_k, speed_k))
+        print("Test Accuracy:   {:.3f}".format(accuracy_k))
         
 if __name__ == "__main__":
     main(True)
