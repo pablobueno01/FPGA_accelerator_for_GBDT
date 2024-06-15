@@ -8,6 +8,7 @@ import numpy as np
 import joblib
 from lightgbm import LGBMClassifier
 import matplotlib.pyplot as plt
+import seaborn as sns
 
 # Images information
 IMAGES = {
@@ -317,38 +318,34 @@ def get_normalized_feature_importance(trained_model):
     
     return normalized_importance
 
-def save_feature_importance(importance, save_path):
-    """Plots a graph of the feature importance and saves it to a file.
-    
-    Parameters
-    ----------
-    importance: NumPy array
-        The normalized feature importance.
-    save_path: str
-        The path to save the plot.
-    
+def save_feature_importance_heatmap(importance, save_path):
     """
-    # Create the x-axis values
-    x = np.arange(len(importance))
+    Saves a heatmap of feature importance.
+
+    Parameters:
+    importance (numpy.ndarray): Array containing the feature importance values.
+    save_path (str): Path to save the heatmap image.
+
+    Returns:
+    None
+    """
+    num_features = importance.shape[0]
     
-    # Create a figure and axis
-    _, ax = plt.subplots()
+    # Calculate the number of rows needed to fit all features into a grid of 10 columns
+    num_rows = (num_features + 9) // 10
     
-    # Create the graph
-    ax.plot(x, importance)
+    # Pad the importance array to make its length a multiple of 10
+    importance_padded = np.pad(importance, (0, num_rows * 10 - num_features), 'constant')
     
-    # Set the x-axis labels
-    ax.set_xlabel('Feature')
-    ax.set_xticks(x[::10])
-    ax.set_xticklabels(x[::10], rotation=90)  # Rotate the x-axis labels
+    # Reshape the padded importance array into a 2D array with 10 columns
+    importance_reshaped = importance_padded.reshape(num_rows, 10)
     
-    # Set the y-axis label
-    ax.set_ylabel('Importance')
-    
-    # Set the title
-    ax.set_title('Feature Importance')
-    
-    # Save the plot
+    # Save the heatmap
+    plt.figure(figsize=(12, num_rows))
+    sns.heatmap(importance_reshaped, cmap="plasma", annot=True, cbar=True)
+    plt.title('Feature Importance Heatmap')
+    plt.xlabel('Feature Index')
+    plt.ylabel('Row Index')
     plt.savefig(save_path)
 
 # MAIN FUNCTION
@@ -392,9 +389,9 @@ def main(load_model=False):
         print("Prediction time: {:.3f}s ({}px/s)".format(time, speed))
         print("Test Accuracy:   {:.3f}\n".format(accuracy))
 
-        # Plot feature importance
+        # Save feature importance graphics
         importance = get_normalized_feature_importance(model)
-        save_feature_importance(importance, "feature_importances/{}_importance.png".format(image_name))
+        save_feature_importance_heatmap(importance, "feature_importances/{}_importance.png".format(image_name))
         
 if __name__ == "__main__":
     main(True)
