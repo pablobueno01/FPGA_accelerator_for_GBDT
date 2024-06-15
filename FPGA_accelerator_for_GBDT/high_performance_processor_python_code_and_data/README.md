@@ -12,7 +12,11 @@ These are the images dataset files.
 
 These are the images ground truth files.
 
-## indian_pines_corrected_model.joblib, KSC_model.joblibt, PaviaU_model.joblib, Salinas_model.joblib
+## models
 
-These are the images trained model files.
+This directory contains the images trained model files.
+
+## feature_importances
+
+This directory contains the heat map of the feature importances of each model
 

@@ -50,6 +50,10 @@ IMAGES = {
     }
 }
 
+# Directories to save the results
+feature_importances_dir = "feature_importances"
+models_dir = "models"
+
 # PREPROCESSING FUNCTIONS
 # =============================================================================
 
@@ -260,10 +264,10 @@ def obtain_trained_model(X_train, y_train, image_name, load_model=False):
         model.fit(X_train, y_train)
 
         # Save trained model
-        joblib.dump(model, "{}_model.joblib".format(image_name))
+        joblib.dump(model, "{}/{}_model.joblib".format(models_dir, image_name))
     else:
         # Load trained model
-        model = joblib.load("{}_model.joblib".format(image_name))
+        model = joblib.load("{}/{}_model.joblib".format(models_dir, image_name))
     
     return model
 
@@ -452,9 +456,9 @@ def main(load_model=False):
         print("Prediction time: {:.3f}s ({}px/s)".format(time, speed))
         print("Test Accuracy:   {:.3f}\n".format(accuracy))
 
-        # Save feature importance heatmap
+        # Save feature importance heat map
         importance = get_normalized_feature_importance(model)
-        save_feature_importance_heatmap(importance, "feature_importances/{}_importance.png".format(image_name))
+        save_feature_importance_heatmap(importance, "{}/{}_importance.png".format(feature_importances_dir, image_name))
 
         # Train reduced model and perform inference
         new_model, k, time_k, speed_k, accuracy_k = train_reducted_model(importance, X_train, y_train, X_test, y_test, accuracy)
@@ -463,7 +467,7 @@ def main(load_model=False):
         print("Test Accuracy:   {:.3f}".format(accuracy_k))
 
         # Save the reduced model
-        joblib.dump(new_model, "{}_model_{}.joblib".format(image_name, k))
+        joblib.dump(new_model, "{}/{}_model_{}.joblib".format(models_dir, image_name, k))
         
 if __name__ == "__main__":
     main(True)
