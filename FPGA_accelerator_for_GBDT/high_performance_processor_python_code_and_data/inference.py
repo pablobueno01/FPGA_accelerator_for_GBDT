@@ -461,6 +461,9 @@ def main(load_model=False):
         print("\nFinal model with {} features:".format(k))
         print("Prediction time: {:.3f}s ({}px/s)".format(time_k, speed_k))
         print("Test Accuracy:   {:.3f}".format(accuracy_k))
+
+        # Save the reduced model
+        joblib.dump(new_model, "{}_model_{}.joblib".format(image_name, k))
         
 if __name__ == "__main__":
     main(True)
