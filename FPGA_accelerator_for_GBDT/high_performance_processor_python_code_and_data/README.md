@@ -20,3 +20,6 @@ This directory contains the images trained model files.
 
 This directory contains the heat map of the feature importances of each model
 
+## accuracy_graphics
+
+This directory contains the graphics comparing the accuracy vs the number of features of each model

@@ -52,6 +52,7 @@ IMAGES = {
 
 # Directories to save the results
 feature_importances_dir = "feature_importances"
+accuracy_graphics_dir = "accuracy_graphics"
 models_dir = "models"
 
 # PREPROCESSING FUNCTIONS
@@ -380,47 +381,71 @@ def save_feature_importance_heatmap(importance, save_path):
     # Save the heatmap
     plt.figure(figsize=(12, num_rows))
     sns.heatmap(importance_reshaped, cmap="plasma", annot=True, cbar=True)
-    plt.title('Feature Importance Heatmap')
-    plt.xlabel('Feature Index')
-    plt.ylabel('Row Index')
+    plt.title('Feature Importance Heatmap', fontsize=16)
+    plt.xlabel('Feature Index', fontsize=14)
+    plt.ylabel('Row Index', fontsize=14)
     plt.savefig(save_path)
+    plt.close()
 
-def train_reducted_model(importance, X_train, y_train, X_test, y_test, accuracy, th_acc=0.01):
+def train_reduced_model(importance, X_train, y_train, X_test, y_test, accuracy, image_name, th_acc=0.01):
     """
-    Trains a reduced model by iteratively selecting the most important features based on their importance scores.
+    Trains a reduced model by selecting the top features based on their importance and gradually increasing 
+    the number of features until the target accuracy is achieved. Also, saves a plot of the accuracy vs 
+    number of features.
 
-    Args:
-        importance (numpy.ndarray): The importance scores of the features.
-        X_train (numpy.ndarray): The training data.
-        y_train (numpy.ndarray): The training labels.
-        X_test (numpy.ndarray): The test data.
-        y_test (numpy.ndarray): The test labels.
-        accuracy (float): The target accuracy to achieve.
-        th_acc (float, optional): The threshold accuracy difference. Defaults to 0.01.
+    Parameters:
+    - importance (numpy.ndarray): Array containing the importance scores of the features.
+    - X_train (numpy.ndarray): Training data features.
+    - y_train (numpy.ndarray): Training data labels.
+    - X_test (numpy.ndarray): Test data features.
+    - y_test (numpy.ndarray): Test data labels.
+    - accuracy (float): Target accuracy to achieve.
+    - image_name (str): Name of the image file to save the accuracy vs number of features plot.
+    - th_acc (float, optional): Threshold accuracy difference. Defaults to 0.01.
 
     Returns:
-        tuple: A tuple containing the trained model, the number of selected features, the inference time, 
-            the inference speed, and the achieved accuracy.
+    - new_model (LightGBM model): Trained model with the selected features.
+    - k (int): Number of features selected.
+    - time_k (float): Inference time of the model with the selected features.
+    - speed_k (float): Inference speed of the model with the selected features.
+    - accuracy_k (float): Accuracy achieved by the model with the selected features.
     """
+
+    # Sort the features by importance
     most_important_features = np.argsort(importance)[::-1]
+    # Search for the minimum number of features that achieves the target accuracy
     k = 1
     accuracy_k = 0
+    accuracy_values = []
+    num_features = []
     while accuracy_k < accuracy - th_acc:
         if k % 10 == 1:
             print("Training model with {} to {} features...".format(k, k+9))
-
+        # Select the top k features
         top_k_features = most_important_features[:k]
         X_train_k = X_train[:, top_k_features]
         X_test_k = X_test[:, top_k_features]
-
+        # Train a new model with the selected features
         new_model = LGBMClassifier(random_state=69)
         new_model.fit(X_train_k, y_train)
-
         # Perform inference with the new model
         time_k, speed_k, accuracy_k = lightgbm_predict(new_model, X_test_k, y_test)
+        accuracy_values.append(accuracy_k)
+        num_features.append(k)
         k += 1
 
     k -= 1  # Decrement k by 1 to get the minimum value
+    # Plot accuracy vs number of features
+    plt.plot(num_features, accuracy_values, label='Accuracy')
+    plt.axhline(y=accuracy, color='r', linestyle='--', label='Target Accuracy')
+    plt.fill_between(num_features, accuracy - th_acc, accuracy, color='r', alpha=0.2, label='Target Accuracy Tolerance')
+    plt.xlabel('Number of Features')
+    plt.ylabel('Accuracy')
+    plt.title('Accuracy vs Number of Features')
+    plt.legend()
+    plt.savefig('{}/{}_accuracy_vs_num_features.png'.format(accuracy_graphics_dir, image_name))
+    plt.close()
+    
     return new_model, k, time_k, speed_k, accuracy_k
 
 # MAIN FUNCTION
@@ -436,7 +461,7 @@ def main(load_model=False):
         image_name = image_info["key"]
         train_size = image_info["p"]
         
-        print("\n--------{}--------".format(image_name))
+        print("\n----------------{}----------------".format(image_name))
         
         # Load image
         X, y = load_image(image_info)
@@ -461,7 +486,7 @@ def main(load_model=False):
         save_feature_importance_heatmap(importance, "{}/{}_importance.png".format(feature_importances_dir, image_name))
 
         # Train reduced model and perform inference
-        new_model, k, time_k, speed_k, accuracy_k = train_reducted_model(importance, X_train, y_train, X_test, y_test, accuracy)
+        new_model, k, time_k, speed_k, accuracy_k = train_reduced_model(importance, X_train, y_train, X_test, y_test, accuracy, image_name)
         print("\nFinal model with {} features:".format(k))
         print("Prediction time: {:.3f}s ({}px/s)".format(time_k, speed_k))
         print("Test Accuracy:   {:.3f}".format(accuracy_k))
