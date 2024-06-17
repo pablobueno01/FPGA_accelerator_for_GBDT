@@ -9,6 +9,7 @@ import joblib
 from lightgbm import LGBMClassifier
 import matplotlib.pyplot as plt
 import seaborn as sns
+from sklearn.model_selection import cross_val_score
 
 # Images information
 IMAGES = {
@@ -331,6 +332,23 @@ def lightgbm_predict(trained_model, X_test, y_test, num_iter=200,
     
     return time, speed, accuracy
 
+def cross_val_accuracy(model, X_train, y_train, cv=3):
+    """
+    Calculates the accuracy of a model using cross-validation.
+
+    Parameters:
+    - model: The model to evaluate.
+    - X_train: The input features for training the model.
+    - y_train: The target labels for training the model.
+    - cv: The number of cross-validation folds.
+
+    Returns:
+    - accuracy: The average accuracy across all folds.
+    """
+    scores = cross_val_score(model, X_train, y_train, cv=cv, scoring='accuracy')
+    accuracy = np.mean(scores)
+    return accuracy
+
 # FEATURE IMPORTANCE FUNCTIONS
 # =============================================================================
 
@@ -387,30 +405,23 @@ def save_feature_importance_heatmap(importance, save_path):
     plt.savefig(save_path)
     plt.close()
 
-def train_reduced_model(importance, X_train, y_train, X_test, y_test, accuracy, image_name, th_acc=0.01):
+def feature_selection(importance, X_train, y_train, accuracy, image_name, th_acc=0.01):
     """
-    Trains a reduced model by selecting the top features based on their importance and gradually increasing 
-    the number of features until the target accuracy is achieved. Also, saves a plot of the accuracy vs 
-    number of features.
+    Perform feature selection based on feature importance scores.
 
-    Parameters:
-    - importance (numpy.ndarray): Array containing the importance scores of the features.
-    - X_train (numpy.ndarray): Training data features.
-    - y_train (numpy.ndarray): Training data labels.
-    - X_test (numpy.ndarray): Test data features.
-    - y_test (numpy.ndarray): Test data labels.
-    - accuracy (float): Target accuracy to achieve.
-    - image_name (str): Name of the image file to save the accuracy vs number of features plot.
-    - th_acc (float, optional): Threshold accuracy difference. Defaults to 0.01.
+    Args:
+        importance (numpy.ndarray): Array of feature importance scores.
+        X_train (numpy.ndarray): Training data features.
+        y_train (numpy.ndarray): Training data labels.
+        accuracy (float): Target accuracy to achieve.
+        image_name (str): Name of the image file to save the plot.
+        th_acc (float, optional): Target accuracy tolerance. Defaults to 0.01.
 
     Returns:
-    - new_model (LightGBM model): Trained model with the selected features.
-    - k (int): Number of features selected.
-    - time_k (float): Inference time of the model with the selected features.
-    - speed_k (float): Inference speed of the model with the selected features.
-    - accuracy_k (float): Accuracy achieved by the model with the selected features.
-    """
+        tuple: A tuple containing the minimum number of features that achieves the target accuracy,
+               the indices of the top-k features, and the cross-validation accuracy of the new model.
 
+    """
     # Sort the features by importance
     most_important_features = np.argsort(importance)[::-1]
     # Search for the minimum number of features that achieves the target accuracy
@@ -424,12 +435,9 @@ def train_reduced_model(importance, X_train, y_train, X_test, y_test, accuracy, 
         # Select the top k features
         top_k_features = most_important_features[:k]
         X_train_k = X_train[:, top_k_features]
-        X_test_k = X_test[:, top_k_features]
-        # Train a new model with the selected features
+        # Calculate the cross-validation accuracy of the new model
         new_model = LGBMClassifier(random_state=69)
-        new_model.fit(X_train_k, y_train)
-        # Perform inference with the new model
-        time_k, speed_k, accuracy_k = lightgbm_predict(new_model, X_test_k, y_test)
+        accuracy_k = cross_val_accuracy(new_model, X_train_k, y_train)
         accuracy_values.append(accuracy_k)
         num_features.append(k)
         k += 1
@@ -441,12 +449,12 @@ def train_reduced_model(importance, X_train, y_train, X_test, y_test, accuracy, 
     plt.fill_between(num_features, accuracy - th_acc, accuracy, color='r', alpha=0.2, label='Target Accuracy Tolerance')
     plt.xlabel('Number of Features')
     plt.ylabel('Accuracy')
-    plt.title('Accuracy vs Number of Features')
+    plt.title('Cross-Validation Accuracy vs Number of Features')
     plt.legend()
     plt.savefig('{}/{}_accuracy_vs_num_features.png'.format(accuracy_graphics_dir, image_name))
     plt.close()
     
-    return new_model, k, time_k, speed_k, accuracy_k
+    return k, top_k_features, accuracy_k
 
 # MAIN FUNCTION
 # =============================================================================
@@ -471,25 +479,36 @@ def main(load_model=False):
         
         # Separate data into train and test sets
         X_train, y_train, X_test, y_test = separate_pixels(X, y, train_size)
+        print("Train pixels: {}\tTest pixels: {}".format(X_train.shape[0], X_test.shape[0]))
         
         # Obtain trained model
         model = obtain_trained_model(X_train, y_train, image_name, load_model)
+        accuracy_train = cross_val_accuracy(model, X_train, y_train)
+        print("\nFull model with {} features:".format(X_train.shape[1]))
+        print("Train Accuracy:  {:.3f}".format(accuracy_train))
         
         # Perform inference
-        time, speed, accuracy = lightgbm_predict(model, X_test, y_test)
-        print("Full model with {} features:".format(X_train.shape[1]))
-        print("Prediction time: {:.3f}s ({}px/s)".format(time, speed))
-        print("Test Accuracy:   {:.3f}\n".format(accuracy))
+        time, speed, accuracy_test = lightgbm_predict(model, X_test, y_test)
+        print("Test Accuracy:   {:.3f}".format(accuracy_test))
+        print("Prediction time: {:.3f}s ({}px/s)\n".format(time, speed))
 
         # Save feature importance heat map
         importance = get_normalized_feature_importance(model)
         save_feature_importance_heatmap(importance, "{}/{}_importance.png".format(feature_importances_dir, image_name))
 
-        # Train reduced model and perform inference
-        new_model, k, time_k, speed_k, accuracy_k = train_reduced_model(importance, X_train, y_train, X_test, y_test, accuracy, image_name)
+        # Perform feature selection
+        k, top_k_features, accuracy_k = feature_selection(importance, X_train, y_train, accuracy_train, image_name)
+
+        # Train reduced model
+        new_model = LGBMClassifier(importance_type='gain', random_state=69)
+        new_model.fit(X_train[:, top_k_features], y_train)
         print("\nFinal model with {} features:".format(k))
-        print("Prediction time: {:.3f}s ({}px/s)".format(time_k, speed_k))
-        print("Test Accuracy:   {:.3f}".format(accuracy_k))
+        print("Train Accuracy:  {:.3f}".format(accuracy_k))
+
+        # Perform inference with reduced model
+        time, speed, accuracy_test = lightgbm_predict(new_model, X_test[:, top_k_features], y_test)
+        print("Test Accuracy:   {:.3f}".format(accuracy_test))
+        print("Prediction time: {:.3f}s ({}px/s)\n".format(time, speed))
 
         # Save the reduced model
         joblib.dump(new_model, "{}/{}_model_{}.joblib".format(models_dir, image_name, k))
