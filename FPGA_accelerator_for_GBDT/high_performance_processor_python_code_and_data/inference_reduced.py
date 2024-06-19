@@ -374,13 +374,13 @@ def get_normalized_feature_importance(trained_model):
     
     return normalized_importance
 
-def save_feature_importance_heatmap(importance, save_path):
+def save_feature_importance_heat_map(importance, save_path):
     """
-    Saves a heatmap of feature importance.
+    Saves a heat map of feature importance.
 
     Parameters:
     importance (numpy.ndarray): Array containing the feature importance values.
-    save_path (str): Path to save the heatmap image.
+    save_path (str): Path to save the heat map image.
 
     Returns:
     None
@@ -396,10 +396,10 @@ def save_feature_importance_heatmap(importance, save_path):
     # Reshape the padded importance array into a 2D array with 10 columns
     importance_reshaped = importance_padded.reshape(num_rows, 10)
     
-    # Save the heatmap
+    # Save the heat map
     plt.figure(figsize=(12, num_rows))
     sns.heatmap(importance_reshaped, cmap="plasma", annot=True, cbar=True)
-    plt.title('Feature Importance Heatmap', fontsize=16)
+    plt.title('Feature Importance Heat Map', fontsize=16)
     plt.xlabel('Feature Index', fontsize=14)
     plt.ylabel('Row Index', fontsize=14)
     plt.savefig(save_path)
@@ -459,7 +459,7 @@ def feature_selection(importance, X_train, y_train, accuracy, image_name, th_acc
 # MAIN FUNCTION
 # =============================================================================
 
-def main(load_model=False):
+def main(load_model=True):
     
     # For each image
     for img in IMAGES:
@@ -494,7 +494,7 @@ def main(load_model=False):
 
         # Save feature importance heat map
         importance = get_normalized_feature_importance(model)
-        save_feature_importance_heatmap(importance, "{}/{}_importance.png".format(feature_importances_dir, image_name))
+        save_feature_importance_heat_map(importance, "{}/{}_importance.png".format(feature_importances_dir, image_name))
 
         # Perform feature selection
         k, top_k_features, accuracy_k = feature_selection(importance, X_train, y_train, accuracy_train, image_name)
@@ -510,8 +510,9 @@ def main(load_model=False):
         print("Test Accuracy:   {:.3f}".format(accuracy_test))
         print("Prediction time: {:.3f}s ({}px/s)\n".format(time, speed))
 
-        # Save the reduced model
+        # Save the reduced model and the top k features
         joblib.dump(new_model, "{}/{}_model_{}.joblib".format(models_dir, image_name, k))
+        np.save(os.path.join(feature_importances_dir, "{}_top_k_features.npy".format(image_name)), top_k_features)
         
 if __name__ == "__main__":
-    main(True)
+    main()

@@ -1,8 +1,8 @@
 # FILES DESCRIPTION
 
-## inference.py
+## inference_reduced.py
 
-This file contains the python code to execute inference on every image.
+This file contains the python code to execute feature reduction and inference on every image.
 
 ## Indian_pines_corrected.mat, KSC.mat, PaviaU.mat, Salinas.mat
 
@@ -18,7 +18,7 @@ This directory contains the images trained model files.
 
 ## feature_importances
 
-This directory contains the heat map of the feature importances of each model
+This directory contains the heat maps of the feature importances and the top-k features arrays of each model
 
 ## accuracy_graphics
 
