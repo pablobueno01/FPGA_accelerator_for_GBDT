@@ -59,7 +59,7 @@ models_dir = "models"
 # PREPROCESSING FUNCTIONS
 # =============================================================================
 
-def load_image(image_info, data_path="."):
+def load_image(image_info, data_path="./data"):
     """Loads the image and the ground truth from a `mat` file.
     
     If the file is not present in the `data_path` directory, downloads
@@ -69,7 +69,7 @@ def load_image(image_info, data_path="."):
     ----------
     image_info: dict
         Dict structure with information of the image.
-    data_path: str, optional (default ".")
+    data_path: str, optional (default "./data")
         Absolute route of the directory of the image files.
     
     Returns
@@ -97,8 +97,8 @@ def load_image(image_info, data_path="."):
         
         # Download image file
         os.system("wget {} -O {}".format(image_info['url'], input_file))
-	    
-	    # Load image file
+        
+        # Load image file
         X = scipy.io.loadmat(input_file)[image_name]
     
     # LOAD GROUND TRUTH
@@ -111,8 +111,8 @@ def load_image(image_info, data_path="."):
         
         # Download ground truth file
         os.system("wget {} -O {}".format(image_info['url_gt'], label_file))
-	    
-	    # Load ground truth file
+        
+        # Load ground truth file
         y = scipy.io.loadmat(label_file)[image_info['key_gt']]
     
     return X, y
@@ -405,7 +405,7 @@ def save_feature_importance_heat_map(importance, save_path):
     plt.savefig(save_path)
     plt.close()
 
-def feature_selection(importance, X_train, y_train, accuracy, image_name, th_acc=0.01):
+def feature_selection(importance, X_train, y_train, accuracy, image_name, th_acc=0.025):
     """
     Perform feature selection based on feature importance scores.
 
@@ -445,8 +445,8 @@ def feature_selection(importance, X_train, y_train, accuracy, image_name, th_acc
     k -= 1  # Decrement k by 1 to get the minimum value
     # Plot accuracy vs number of features
     plt.plot(num_features, accuracy_values, label='Accuracy')
-    plt.axhline(y=accuracy, color='r', linestyle='--', label='Target Accuracy')
-    plt.fill_between(num_features, accuracy - th_acc, accuracy, color='r', alpha=0.2, label='Target Accuracy Tolerance')
+    plt.axhline(y=accuracy, color='r', linestyle='--', label='Target Accuracy: {:.3f}'.format(accuracy))
+    plt.fill_between(num_features, accuracy - th_acc, accuracy, color='r', alpha=0.2, label='Target Accuracy Tolerance: {}'.format(th_acc))
     plt.xlabel('Number of Features')
     plt.ylabel('Accuracy')
     plt.title('Cross-Validation Accuracy vs Number of Features')
@@ -485,7 +485,7 @@ def main(load_model=True):
         model = obtain_trained_model(X_train, y_train, image_name, load_model)
         accuracy_train = cross_val_accuracy(model, X_train, y_train)
         print("\nFull model with {} features:".format(X_train.shape[1]))
-        print("Train Accuracy:  {:.3f}".format(accuracy_train))
+        print("Cross-val Accuracy:  {:.3f}".format(accuracy_train))
         
         # Perform inference
         time, speed, accuracy_test = lightgbm_predict(model, X_test, y_test)
@@ -503,7 +503,7 @@ def main(load_model=True):
         new_model = LGBMClassifier(importance_type='gain', random_state=69)
         new_model.fit(X_train[:, top_k_features], y_train)
         print("\nFinal model with {} features:".format(k))
-        print("Train Accuracy:  {:.3f}".format(accuracy_k))
+        print("Cross-val Accuracy:  {:.3f}".format(accuracy_k))
 
         # Perform inference with reduced model
         time, speed, accuracy_test = lightgbm_predict(new_model, X_test[:, top_k_features], y_test)
@@ -512,7 +512,7 @@ def main(load_model=True):
 
         # Save the reduced model and the top k features
         joblib.dump(new_model, "{}/{}_model_{}.joblib".format(models_dir, image_name, k))
-        np.save(os.path.join(feature_importances_dir, "{}_top_k_features.npy".format(image_name)), top_k_features)
+        np.save(os.path.join(feature_importances_dir, "{}_top_{}_features.npy".format(image_name, k)), top_k_features)
         
 if __name__ == "__main__":
     main()
