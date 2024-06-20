@@ -483,9 +483,9 @@ def main(load_model=True):
         
         # Obtain trained model
         model = obtain_trained_model(X_train, y_train, image_name, load_model)
-        accuracy_train = cross_val_accuracy(model, X_train, y_train)
+        accuracy_cv = cross_val_accuracy(model, X_train, y_train)
         print("\nFull model with {} features:".format(X_train.shape[1]))
-        print("Cross-val Accuracy:  {:.3f}".format(accuracy_train))
+        print("Cross-val Accuracy:  {:.3f}".format(accuracy_cv))
         
         # Perform inference
         time, speed, accuracy_test = lightgbm_predict(model, X_test, y_test)
@@ -497,12 +497,12 @@ def main(load_model=True):
         save_feature_importance_heat_map(importance, "{}/{}_importance.png".format(feature_importances_dir, image_name))
 
         # Perform feature selection
-        k, top_k_features, accuracy_k = feature_selection(importance, X_train, y_train, accuracy_train, image_name)
+        k, top_k_features, accuracy_k = feature_selection(importance, X_train, y_train, accuracy_cv, image_name)
 
         # Train reduced model
         new_model = LGBMClassifier(importance_type='gain', random_state=69)
         new_model.fit(X_train[:, top_k_features], y_train)
-        print("\nFinal model with {} features:".format(k))
+        print("\nReduced model with {} features:".format(k))
         print("Cross-val Accuracy:  {:.3f}".format(accuracy_k))
 
         # Perform inference with reduced model
