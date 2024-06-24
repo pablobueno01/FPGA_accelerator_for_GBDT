@@ -1,6 +1,7 @@
 #!/usr/bin/env python2
 # -*- coding: utf-8 -*-
 from inference_reduced import *
+from scipy.stats import mode
 
 FOREST = [
     LGBMClassifier(random_state=69),
@@ -21,26 +22,38 @@ FOREST = [
     LGBMClassifier(random_state=69, reg_lambda=0.1)
 ]
 
-def forest_predict(trained_forest, X_test, y_test):
+def forest_predict(trained_forest, X_test, y_test, use_probabilities=False):
     individual_accuracies = []
     sum_probabilities = None
+    individual_predictions = []
+
     for clf in trained_forest:
         # Get accuracy of the individual classifier
         accuracy = clf.score(X_test, y_test)
         individual_accuracies.append(accuracy)
-        # Get probabilities of each class for the individual classifier
-        probabilities = clf.predict_proba(X_test)
-        if sum_probabilities is None:
-            sum_probabilities = probabilities
+
+        if use_probabilities:
+            # Get probabilities of each class for the individual classifier
+            probabilities = clf.predict_proba(X_test)
+            if sum_probabilities is None:
+                sum_probabilities = probabilities
+            else:
+                sum_probabilities += probabilities
         else:
-            sum_probabilities += probabilities
+            # Get predictions of the individual classifier
+            individual_predictions.append(clf.predict(X_test))
     
-    # Get the probabilities of the forest as the average of the individual probabilities
-    forest_probabilities = sum_probabilities / len(trained_forest)
-    # Get the accuracy of the forest
-    forest_predictions = np.argmax(forest_probabilities, axis=1)
-    test_ok = forest_predictions == y_test
-    accuracy_forest = np.mean(test_ok)
+    if use_probabilities:
+        # Get the probabilities of the forest as the average of the individual probabilities
+        forest_probabilities = sum_probabilities / len(trained_forest)
+        # Get the predictions of the forest as the class with the highest probability
+        forest_predictions = np.argmax(forest_probabilities, axis=1)
+    else:
+        # Get the predictions of the forest as the mode of the individual predictions
+        forest_predictions, _ = mode(np.array(individual_predictions), axis=0)
+        forest_predictions = forest_predictions.ravel()
+    
+    accuracy_forest = np.mean(forest_predictions == y_test)
     
     return accuracy_forest, individual_accuracies
 
