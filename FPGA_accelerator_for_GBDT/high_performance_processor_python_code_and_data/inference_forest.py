@@ -7,16 +7,16 @@ from lightgbm import LGBMClassifier
 
 # Define the parameter ranges
 param_ranges = {
-    'max_depth': range(5, 15),
-    'n_estimators': range(50, 250),
+    'max_depth': range(5, 20),
+    'n_estimators': range(50, 300),
     'num_leaves': range(10, 40),
-    'min_child_samples': range(5, 30),
+    'min_child_samples': range(10, 30),
     'subsample': [0.6, 0.7, 0.8, 0.9],
-    'subsample_freq': [1, 2],
+    'subsample_freq': [1, 2, 3],
     'learning_rate': [0.05, 0.1, 0.2],
-    'reg_alpha': [0.0, 0.1, 0.2],
-    'reg_lambda': [0.0, 0.1, 0.2],
-    'colsample_bytree': [0.6, 0.7, 0.8, 0.9, 1.0],
+    #'reg_alpha': [0.0, 0.1, 0.2],
+    #'reg_lambda': [0.0, 0.1, 0.2],
+    'colsample_bytree': [0.7, 0.8, 0.9, 1.0],
 }
 
 # Generate random parameter combinations
@@ -112,18 +112,20 @@ def main():
         print("Test Accuracy:   {:.3f}\n".format(accuracy_test))
 
         # Train forest
+        print("Training forest with {} models...".format(len(FOREST)))
         for clf in FOREST:
             clf.fit(X_train_k, y_train)
 
         # Perform inference with forest
+        print("Performing inference with forest...")
         accuracy_forest, individual_accuracies = forest_predict(FOREST, X_test_k, y_test)
-        print("Individual Test Accuracies:")
-        for accuracy in individual_accuracies:
-            print("{:.3f}".format(accuracy))
-        print("Forest Test Accuracy: {:.3f}".format(accuracy_forest))
+        # print("Individual Test Accuracies:")
+        # for accuracy in individual_accuracies:
+        #     print("{:.3f}".format(accuracy))
+        print("\nForest Test Accuracy: {:.3f}".format(accuracy_forest))
 
         # Save forest models
-        joblib.dump(FOREST, "{}/forest_models.joblib".format(models_dir))
+        joblib.dump(FOREST, "{}/{}_forest_models.joblib".format(models_dir, image_name))
         
 if __name__ == "__main__":
     main()
