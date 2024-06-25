@@ -2,27 +2,45 @@
 # -*- coding: utf-8 -*-
 from inference_reduced import *
 from scipy.stats import mode
+from sklearn.model_selection import ParameterSampler
+from lightgbm import LGBMClassifier
 
-FOREST = [
-    LGBMClassifier(random_state=69),
-    LGBMClassifier(random_state=69, max_depth=5),
-    LGBMClassifier(random_state=69, n_estimators=50),
-    LGBMClassifier(random_state=69, n_estimators=150),
-    LGBMClassifier(random_state=69, num_leaves=11),
-    LGBMClassifier(random_state=69, num_leaves=51),
-    LGBMClassifier(random_state=69, min_child_samples=10),
-    LGBMClassifier(random_state=69, min_child_samples=30),
-    LGBMClassifier(random_state=69, subsample_freq=1, subsample=0.8),
-    LGBMClassifier(random_state=69, subsample_freq=1, subsample=0.6),
-    LGBMClassifier(random_state=69, subsample_freq=2, subsample=0.8),
-    LGBMClassifier(random_state=69, subsample_freq=2, subsample=0.6),
-    LGBMClassifier(random_state=69, learning_rate=0.05),
-    LGBMClassifier(random_state=69, learning_rate=0.2),
-    LGBMClassifier(random_state=69, reg_alpha=0.1),
-    LGBMClassifier(random_state=69, reg_lambda=0.1)
-]
+# Define the parameter ranges
+param_ranges = {
+    'max_depth': range(5, 15),
+    'n_estimators': range(50, 250),
+    'num_leaves': range(10, 40),
+    'min_child_samples': range(5, 30),
+    'subsample': [0.6, 0.7, 0.8, 0.9],
+    'subsample_freq': [1, 2],
+    'learning_rate': [0.05, 0.1, 0.2],
+    'reg_alpha': [0.0, 0.1, 0.2],
+    'reg_lambda': [0.0, 0.1, 0.2],
+    'colsample_bytree': [0.6, 0.7, 0.8, 0.9, 1.0],
+}
 
-def forest_predict(trained_forest, X_test, y_test, use_probabilities=False):
+# Generate random parameter combinations
+param_combinations = list(ParameterSampler(param_ranges, n_iter=16, random_state=69))
+
+# Create the list of LGBMClassifier models with random parameters
+FOREST = [LGBMClassifier(random_state=69 + i, **params) for i, params in enumerate(param_combinations)]
+
+def forest_predict(trained_forest, X_test, y_test, use_probabilities=True):
+    """
+    Predicts the class labels or probabilities for a given test dataset using a trained random forest.
+
+    Parameters:
+        trained_forest (list): A list of trained decision tree classifiers representing the random forest.
+        X_test (array-like): The test dataset features.
+        y_test (array-like): The true class labels for the test dataset.
+        use_probabilities (bool, optional): Whether to return class probabilities instead of class labels. 
+                                            Defaults to False.
+
+    Returns:
+        accuracy_forest (float): The accuracy of the random forest predictions.
+        individual_accuracies (list): A list of accuracies for each individual classifier in the random forest.
+    """
+    
     individual_accuracies = []
     sum_probabilities = None
     individual_predictions = []
