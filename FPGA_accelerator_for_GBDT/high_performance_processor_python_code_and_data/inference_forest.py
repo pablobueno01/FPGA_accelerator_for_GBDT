@@ -7,14 +7,14 @@ from lightgbm import LGBMClassifier
 
 # Define the parameter ranges
 param_ranges = {
-    'max_depth': range(5, 10),
+    'max_depth': range(5, 12),
     'n_estimators': range(50, 300),
     'min_child_samples': range(10, 30),
     'subsample': [0.6, 0.7, 0.8, 0.9],
     'subsample_freq': [1, 2, 3],
     'learning_rate': [0.05, 0.1, 0.2],
-    #'reg_alpha': [0.0, 0.1, 0.2],
-    #'reg_lambda': [0.0, 0.1, 0.2],
+    'reg_alpha': [0.0, 0.1, 0.2],
+    'reg_lambda': [0.0, 0.1, 0.2],
     'colsample_bytree': [0.7, 0.8, 0.9, 1.0],
 }
 
