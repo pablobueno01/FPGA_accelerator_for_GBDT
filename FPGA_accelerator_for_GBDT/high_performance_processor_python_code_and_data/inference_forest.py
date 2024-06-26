@@ -7,9 +7,8 @@ from lightgbm import LGBMClassifier
 
 # Define the parameter ranges
 param_ranges = {
-    'max_depth': range(5, 20),
+    'max_depth': range(5, 10),
     'n_estimators': range(50, 300),
-    'num_leaves': range(10, 40),
     'min_child_samples': range(10, 30),
     'subsample': [0.6, 0.7, 0.8, 0.9],
     'subsample_freq': [1, 2, 3],
@@ -21,7 +20,10 @@ param_ranges = {
 
 # Generate random parameter combinations
 param_combinations = list(ParameterSampler(param_ranges, n_iter=16, random_state=69))
-
+# Set the number of leaves based on the max_depth
+for params in param_combinations:
+    params['num_leaves'] = 2 ** (params['max_depth'])
+    
 # Create the list of LGBMClassifier models with random parameters
 FOREST = [LGBMClassifier(random_state=69 + i, **params) for i, params in enumerate(param_combinations)]
 
@@ -33,8 +35,8 @@ def forest_predict(trained_forest, X_test, y_test, use_probabilities=True):
         trained_forest (list): A list of trained decision tree classifiers representing the random forest.
         X_test (array-like): The test dataset features.
         y_test (array-like): The true class labels for the test dataset.
-        use_probabilities (bool, optional): Whether to return class probabilities instead of class labels. 
-                                            Defaults to False.
+        use_probabilities (bool, optional): If True, the prediction is based on the average of the probabilities 
+            of the classifiers. If False, the prediction is based on the mode of the predictions of the classifiers.e.
 
     Returns:
         accuracy_forest (float): The accuracy of the random forest predictions.
