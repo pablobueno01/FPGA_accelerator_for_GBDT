@@ -52,9 +52,9 @@ IMAGES = {
 }
 
 # Directories to save the results
-feature_importances_dir = "feature_importances"
-accuracy_graphics_dir = "accuracy_graphics"
-models_dir = "models"
+FEATURE_IMPORTANCES_DIR = "feature_importances"
+ACCURACY_GRAPHICS_DIR = "accuracy_graphics"
+MODELS_DIR = "models"
 
 # PREPROCESSING FUNCTIONS
 # =============================================================================
@@ -266,10 +266,10 @@ def obtain_trained_model(X_train, y_train, image_name, load_model=False):
         model.fit(X_train, y_train)
 
         # Save trained model
-        joblib.dump(model, "{}/{}_model.joblib".format(models_dir, image_name))
+        joblib.dump(model, "{}/{}_model.joblib".format(MODELS_DIR, image_name))
     else:
         # Load trained model
-        model = joblib.load("{}/{}_model.joblib".format(models_dir, image_name))
+        model = joblib.load("{}/{}_model.joblib".format(MODELS_DIR, image_name))
     
     return model
 
@@ -451,7 +451,7 @@ def feature_selection(importance, X_train, y_train, accuracy, image_name, th_acc
     plt.ylabel('Accuracy')
     plt.title('Cross-Validation Accuracy vs Number of Features')
     plt.legend()
-    plt.savefig('{}/{}_accuracy_vs_num_features.png'.format(accuracy_graphics_dir, image_name))
+    plt.savefig('{}/{}_accuracy_vs_num_features.png'.format(ACCURACY_GRAPHICS_DIR, image_name))
     plt.close()
     
     return k, top_k_features, accuracy_k
@@ -494,7 +494,7 @@ def main(load_model=True):
 
         # Save feature importance heat map
         importance = get_normalized_feature_importance(model)
-        save_feature_importance_heat_map(importance, "{}/{}_importance.png".format(feature_importances_dir, image_name))
+        save_feature_importance_heat_map(importance, "{}/{}_importance.png".format(FEATURE_IMPORTANCES_DIR, image_name))
 
         # Perform feature selection
         k, top_k_features, accuracy_k = feature_selection(importance, X_train, y_train, accuracy_cv, image_name)
@@ -511,8 +511,8 @@ def main(load_model=True):
         print("Prediction time: {:.3f}s ({}px/s)\n".format(time, speed))
 
         # Save the reduced model and the top k features
-        joblib.dump(new_model, "{}/{}_model_{}.joblib".format(models_dir, image_name, k))
-        np.save(os.path.join(feature_importances_dir, "{}_top_{}_features.npy".format(image_name, k)), top_k_features)
+        joblib.dump(new_model, "{}/{}_model_{}.joblib".format(MODELS_DIR, image_name, k))
+        np.save(os.path.join(FEATURE_IMPORTANCES_DIR, "{}_top_{}_features.npy".format(image_name, k)), top_k_features)
         
 if __name__ == "__main__":
     main()
