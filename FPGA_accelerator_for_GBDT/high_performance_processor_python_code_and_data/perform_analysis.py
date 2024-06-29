@@ -1,6 +1,7 @@
 #!/usr/bin/env python2
 # -*- coding: utf-8 -*-
 from inference_reduced import *
+from inference_forest import *
 import os
 import sys
 import math
@@ -306,6 +307,7 @@ def main():
         X_test_k = X_test[:, top_k_features]
 
         # -------------FOREST MODEL ANALYSIS-------------
+        print('\nForest with {} trees and {} features'.format(FOREST_SIZE, k))
 
         # Load the trained forest model
         trained_forest = joblib.load("{}/{}_forest_models.joblib".format(MODELS_DIR, image_name))
@@ -314,18 +316,33 @@ def main():
         individual_probabilities = get_forest_individual_probabilities(trained_forest, X_test_k)
 
         # Get the average uncertainty values by class
-        class_H_avg, class_Ep_avg, class_H_Ep_avg = analyse_entropy(individual_probabilities, y_test)
-        print("\nClass H avg:")
-        for class_num, avg in enumerate(class_H_avg):
-            print("Class {}: {}".format(class_num, avg))
+        # class_H_avg, class_Ep_avg, class_H_Ep_avg = analyse_entropy(individual_probabilities, y_test)
+        # print("\nClass H avg:")
+        # for class_num, avg in enumerate(class_H_avg):
+        #     print("Class {}: {:.3f}".format(class_num, avg))
         
-        print("\nClass Ep avg:")
-        for class_num, avg in enumerate(class_Ep_avg):
-            print("Class {}: {}".format(class_num, avg))
+        # print("\nClass Ep avg:")
+        # for class_num, avg in enumerate(class_Ep_avg):
+        #     print("Class {}: {:.3f}".format(class_num, avg))
         
-        print("\nClass H - Ep avg:")
-        for class_num, avg in enumerate(class_H_Ep_avg):
-            print("Class {}: {}".format(class_num, avg))
+        # print("\nClass H - Ep avg:")
+        # for class_num, avg in enumerate(class_H_Ep_avg):
+        #     print("Class {}: {:.3f}".format(class_num, avg))
+
+        # Generate reliability diagram data
+        reliability_data = reliability_diagram(individual_probabilities, y_test)
+        plt.plot(reliability_data, label=image_name)
+
+    plt.plot([0, 9], [0.05, 0.95], 'k--', label='Optimal Calibration')
+    plt.xlabel("Predicted Probability Group")
+    plt.ylabel("Observed Probability")
+    plt.title("Reliability Diagram")
+    plt.xticks(np.arange(10), [str(i/10.0) + "-" + str((i+1)/10.0) for i in range(10)], rotation=45)
+    plt.yticks(np.arange(0, 1.1, 0.1))
+    plt.grid(axis='y', linestyle='--', alpha=0.5)
+    plt.legend()
+    plt.savefig(ACCURACY_GRAPHICS_DIR + "/reliability_diagram.png")
+    plt.close()
 
 if __name__ == "__main__":
     main()

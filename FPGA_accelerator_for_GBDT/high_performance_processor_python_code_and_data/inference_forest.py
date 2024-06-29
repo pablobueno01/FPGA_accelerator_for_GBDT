@@ -5,6 +5,8 @@ from scipy.stats import mode
 from sklearn.model_selection import ParameterSampler
 from lightgbm import LGBMClassifier
 
+FOREST_SIZE = 16
+
 # Define the parameter ranges
 param_ranges = {
     'max_depth': range(5, 12),
@@ -19,7 +21,7 @@ param_ranges = {
 }
 
 # Generate random parameter combinations
-param_combinations = list(ParameterSampler(param_ranges, n_iter=16, random_state=69))
+param_combinations = list(ParameterSampler(param_ranges, n_iter=FOREST_SIZE, random_state=69))
 # Set the number of leaves based on the max_depth
 for params in param_combinations:
     params['num_leaves'] = 2 ** (params['max_depth'])
