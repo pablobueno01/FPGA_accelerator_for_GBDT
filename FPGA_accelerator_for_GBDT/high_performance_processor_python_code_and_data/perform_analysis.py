@@ -262,6 +262,21 @@ def map_prediction(predictions):
     
     return pred_map, test_H
 
+# PREDICTION FUNCTION
+# =============================================================================
+
+def get_forest_individual_probabilities(trained_forest, X_test):
+    individual_probabilities = []
+
+    for clf in trained_forest:
+        # Get probabilities of each class for the individual classifier
+        probabilities = clf.predict_proba(X_test)
+        individual_probabilities.append(probabilities)
+        
+    return np.array(individual_probabilities)
+
+# MAIN FUNCTION
+# =============================================================================
 
 def main():
     # For each image
@@ -290,15 +305,27 @@ def main():
         top_k_features = np.load(top_k_ft_path)
         X_test_k = X_test[:, top_k_features]
 
-        # Load the trained reduced model
-        model = joblib.load("{}/{}_model_{}.joblib".format(MODELS_DIR, image_name, k))
-        print("\nReduced model with {} features:".format(k))
+        # -------------FOREST MODEL ANALYSIS-------------
 
-        # Obtain predictions
-        predictions = []
-        prediction = model.predict_proba(X_test_k)
-        predictions.append(prediction)
+        # Load the trained forest model
+        trained_forest = joblib.load("{}/{}_forest_models.joblib".format(MODELS_DIR, image_name))
+
+        # Get the individual probabilities of the forest
+        individual_probabilities = get_forest_individual_probabilities(trained_forest, X_test_k)
+
+        # Get the average uncertainty values by class
+        class_H_avg, class_Ep_avg, class_H_Ep_avg = analyse_entropy(individual_probabilities, y_test)
+        print("\nClass H avg:")
+        for class_num, avg in enumerate(class_H_avg):
+            print("Class {}: {}".format(class_num, avg))
         
+        print("\nClass Ep avg:")
+        for class_num, avg in enumerate(class_Ep_avg):
+            print("Class {}: {}".format(class_num, avg))
+        
+        print("\nClass H - Ep avg:")
+        for class_num, avg in enumerate(class_H_Ep_avg):
+            print("Class {}: {}".format(class_num, avg))
 
 if __name__ == "__main__":
     main()
