@@ -411,16 +411,16 @@ def plot_accuracy_vs_uncertainty(output_dir, acc_data, px_data, w=7, h=4, colour
     # Manually added handles upper lines (to match the bars)
     ax.add_artist(ax.legend([lg_handles[0]], [""], framealpha=0,
                             handlelength=1.8, loc='upper center',
-                            bbox_to_anchor=(-0.0555, 1.146)))
+                            bbox_to_anchor=(-0.13, 1.146)))
     ax.add_artist(ax.legend([lg_handles[1]], [""], framealpha=0,
                             handlelength=1.8, loc='upper center',
-                            bbox_to_anchor=(0.177, 1.146)))
+                            bbox_to_anchor=(0.154, 1.146)))
     ax.add_artist(ax.legend([lg_handles[2]], [""], framealpha=0,
                             handlelength=1.8, loc='upper center',
-                            bbox_to_anchor=(0.3947, 1.146)))
+                            bbox_to_anchor=(0.64478, 1.146)))
     ax.add_artist(ax.legend([lg_handles[3]], [""], framealpha=0,
                             handlelength=1.8, loc='upper center',
-                            bbox_to_anchor=(0.6406, 1.146)))
+                            bbox_to_anchor=(0.927, 1.146)))
 
     # Save
     file_name = "accuracy_vs_uncertainty.png"
@@ -516,6 +516,8 @@ def main():
 
     # Generate accuracy vs uncertainty plot
     plot_accuracy_vs_uncertainty(ACCURACY_GRAPHICS_DIR, acc_dict, px_dict)
+
+    print("\n")
 
 if __name__ == "__main__":
     main()
