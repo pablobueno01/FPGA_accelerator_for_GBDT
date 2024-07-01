@@ -129,7 +129,7 @@ def reliability_diagram(predictions, y_test, num_groups=10):
     
     return result
 
-def accuracy_vs_uncertainty(predictions, y_test, H_limit=1.5, num_groups=15):
+def accuracy_vs_uncertainty(predictions, y_test, H_limit=2.5, num_groups=25):
     """Generates the `accuracy vs uncertainty` data
     
     Parameters
@@ -138,9 +138,9 @@ def accuracy_vs_uncertainty(predictions, y_test, H_limit=1.5, num_groups=15):
         Array with the bayesian predictions.
     y_test : ndarray
         Testing data set labels.
-    H_limit : float, optional (default: 1.5)
+    H_limit : float, optional (default: 2.5)
         The max value of the range of uncertainty.
-    num_groups : int, optional (default: 15)
+    num_groups : int, optional (default: 25)
         Number of groups in which the prediction will be divided
         according to their uncertainty.
     
@@ -321,7 +321,7 @@ def plot_reliability_diagram(output_dir, data, w=7, h=4, colours=COLOURS, num_gr
     print("\nSaved {file_name} in {output_dir}".format(file_name=file_name, output_dir=output_dir))
 
 def plot_accuracy_vs_uncertainty(output_dir, acc_data, px_data, w=7, h=4, colours=COLOURS,
-                                 H_limit=1.5, num_groups=15):
+                                 H_limit=2.5, num_groups=25):
     """Generates and saves the `accuracy vs uncertainty` plot
     
     It saves the plot in `output_dir` in pdf format with the name
@@ -346,9 +346,9 @@ def plot_accuracy_vs_uncertainty(output_dir, acc_data, px_data, w=7, h=4, colour
     colours : dict, optional (default: COLOURS)
         It contains the HEX value of the RGB colour of each dataset.
         The key must be the dataset name abbreviation.
-    H_limit : float, optional (default: 1.5)
+    H_limit : float, optional (default: 2.5)
         The max value of the range of uncertainty for the plot.
-    num_groups : int, optional (default: 15)
+    num_groups : int, optional (default: 25)
         Number of groups to divide xticks labels.
     """
     
