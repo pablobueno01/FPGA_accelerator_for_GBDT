@@ -236,32 +236,88 @@ def analyse_entropy(predictions, y_test):
     # Return averages
     return class_H/class_px, class_Ep/class_px, class_H_Ep/class_px
 
-def map_prediction(predictions):
-    """Returns the bayesian predictions and global uncertainties (H)
+# PLOT FUNCTIONS
+# =============================================================================
+
+# Plots colours
+COLOURS = {"indian_pines_corrected": "#FA9F42",
+           "KSC": "#0B6E4F",
+           "paviaU": "#721817",
+           "salinas": "#D496A7"}
+
+def plot_reliability_diagram(output_dir, data, w=7, h=4, colours=COLOURS, num_groups=10):
+    """Generates and saves the `reliability diagram` plot
     
-    This function is implemented to facilitate all the data required
-    for the maps comparisons.
+    It saves the plot in `output_dir` in pdf format with the name
+    `reliability_diagram.png`.
     
     Parameters
     ----------
-    predictions : ndarray
-        Array with the bayesian predictions.
-    
-    Returns
-    -------
-    pred_map : ndarray
-        Array with the averages of the bayesian predictions.
-    test_H : ndarray
-        Array with the global uncertainty (H) values.
+    output_dir : str
+        Path of the output directory. It can be an absolute path or
+        relative from the execution path.
+    data : dict
+        It contains the `reliability diagram` data of each dataset. The
+        key must be the dataset name abbreviation.
+    w : int, optional (default: 7)
+        Width of the plot.
+    h : int, optional (default: 4)
+        Height of the plot.
+    colours : dict, optional (default: COLOURS)
+        It contains the HEX value of the RGB colour of each dataset.
+        The key must be the dataset name abbreviation.
+    num_groups : int, optional (default: 10)
+        Number of groups to divide xticks labels.
     """
     
-    # Calculate the bayesian samples average prediction
-    pred_map = np.mean(predictions, axis=0).argmax(axis=1)
+    # Generate x axis labels and data for the optimal calibration curve
+    p_groups = np.linspace(0.0, 1.0, num_groups + 1)
+    center = (p_groups[1] - p_groups[0])/2
+    optimal = (p_groups + center)[:-1]
+    if num_groups <= 10:
+        labels = ["{:.1f}-{:.1f}".format(p_groups[i], p_groups[i + 1])
+              for i in range(num_groups)]
+    else:
+        labels = ["{:.2f}-{:.2f}".format(p_groups[i], p_groups[i + 1])
+              for i in range(num_groups)]
     
-    # Get the global uncertainty values
-    test_H = _predictive_entropy(predictions)
+    # Xticks
+    xticks = np.arange(len(labels))
     
-    return pred_map, test_H
+    # Generate figure and axis
+    fig, ax = plt.subplots(figsize=(w, h))
+    
+    # Plots
+    for img_name in colours.keys():
+        ax.plot(xticks[:len(data[img_name])], data[img_name], label=img_name,
+                color=colours[img_name])
+    ax.plot(xticks, optimal, label="Optimal calibration", color='black',
+            linestyle='dashed')
+    
+    # Axes labels
+    ax.set_xlabel("Predicted probability")
+    ax.set_ylabel("Observed probability")
+    
+    # Y axis limit
+    ax.set_ylim((0, 1))
+    
+    # X axis limit
+    ax.set_xlim((xticks[0], xticks[-1]))
+    
+    # Rotate X axis labels
+    ax.set_xticks(xticks)
+    ax.set_xticklabels(labels, rotation=45, ha='right')
+    
+    # Grid
+    ax.grid(axis='y')
+    
+    # Legend
+    ax.legend(loc='upper center', ncol=3, bbox_to_anchor=(0.5, 1.2))
+    
+    # Save
+    file_name = "reliability_diagram.png"
+    plt.savefig(os.path.join(output_dir, file_name), bbox_inches='tight')
+    print("\n\nSaved {file_name} in {output_dir}".format(file_name=file_name, output_dir=output_dir))
 
 # PREDICTION FUNCTION
 # =============================================================================
@@ -280,6 +336,9 @@ def get_forest_individual_probabilities(trained_forest, X_test):
 # =============================================================================
 
 def main():
+
+    reliability_dict = {}
+
     # For each image
     for img in IMAGES:
         
@@ -331,18 +390,10 @@ def main():
 
         # Generate reliability diagram data
         reliability_data = reliability_diagram(individual_probabilities, y_test)
-        plt.plot(reliability_data, label=image_name)
-
-    plt.plot([0, 9], [0.05, 0.95], 'k--', label='Optimal Calibration')
-    plt.xlabel("Predicted Probability Group")
-    plt.ylabel("Observed Probability")
-    plt.title("Reliability Diagram")
-    plt.xticks(np.arange(10), [str(i/10.0) + "-" + str((i+1)/10.0) for i in range(10)], rotation=45)
-    plt.yticks(np.arange(0, 1.1, 0.1))
-    plt.grid(axis='y', linestyle='--', alpha=0.5)
-    plt.legend()
-    plt.savefig(ACCURACY_GRAPHICS_DIR + "/reliability_diagram.png")
-    plt.close()
+        reliability_dict[image_name] = reliability_data
+        
+    # Generate reliability diagram plot
+    plot_reliability_diagram(ACCURACY_GRAPHICS_DIR, reliability_dict)
 
 if __name__ == "__main__":
     main()
