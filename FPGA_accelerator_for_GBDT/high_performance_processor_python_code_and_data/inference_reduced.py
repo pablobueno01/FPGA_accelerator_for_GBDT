@@ -20,7 +20,23 @@ IMAGES = {
         "key_gt": "indian_pines_gt",
         "url": "http://www.ehu.eus/ccwintco/uploads/6/67/Indian_pines_corrected.mat",
         "url_gt": "http://www.ehu.eus/ccwintco/uploads/c/c4/Indian_pines_gt.mat",
-        "p": 0.15
+        "p": 0.15,
+        "num_classes": 16,
+        'wl' : np.linspace(400, 2500, num=224).take([
+            0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18,
+            19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35,
+            36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52,
+            53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64, 65, 66, 67, 68, 69,
+            70, 71, 72, 73, 74, 75, 76, 77, 78, 79, 80, 81, 82, 83, 84, 85, 86,
+            87, 88, 89, 90, 91, 92, 93, 94, 95, 96, 97, 98, 99, 100, 101, 102,
+            108, 109, 110, 111, 112, 113, 114, 115, 116, 117, 118, 119, 120,
+            121, 122, 123, 124, 125, 126, 127, 128, 129, 130, 131, 132, 133,
+            134, 135, 136, 137, 138, 139, 140, 141, 142, 143, 144, 145, 146,
+            147, 148, 163, 164, 165, 166, 167, 168, 169, 170, 171, 172, 173,
+            174, 175, 176, 177, 178, 179, 180, 181, 182, 183, 184, 185, 186,
+            187, 188, 189, 190, 191, 192, 193, 194, 195, 196, 197, 198, 199,
+            200, 201, 202, 203, 204, 205, 206, 207, 208, 209, 210, 211, 212,
+            213, 214, 215, 216, 217, 218, 220, 221, 223]).tolist()
     },
     "KSC": {
         "file": "KSC.mat",
@@ -29,7 +45,23 @@ IMAGES = {
         "key_gt": "KSC_gt",
         "url": "http://www.ehu.es/ccwintco/uploads/2/26/KSC.mat",
         "url_gt": "http://www.ehu.es/ccwintco/uploads/a/a6/KSC_gt.mat",
-        "p": 0.15
+        "p": 0.15,
+        "num_classes": 13,
+        'wl' : np.linspace(400, 2500, num=224).take([
+            0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18,
+            19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35,
+            36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52,
+            53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64, 65, 66, 67, 68, 69,
+            70, 71, 72, 73, 74, 75, 76, 77, 78, 79, 80, 81, 82, 83, 84, 85, 86,
+            87, 88, 89, 90, 91, 92, 93, 94, 95, 96, 97, 98, 99, 100, 101, 102,
+            111, 112, 113, 114, 115, 116, 117, 118, 119, 120, 121, 122, 123,
+            124, 125, 126, 127, 128, 129, 130, 131, 132, 133, 134, 135, 136,
+            137, 138, 139, 140, 141, 142, 143, 144, 145, 146, 147, 148, 167,
+            168, 169, 170, 171, 172, 173, 174, 175, 176, 177, 178, 179, 180,
+            181, 182, 183, 184, 185, 186, 187, 188, 189, 190, 191, 192, 193,
+            194, 195, 196, 197, 198, 199, 200, 201, 202, 203, 204, 205, 206,
+            207, 208, 209, 210, 211, 212, 213, 214, 215, 216, 217, 218, 220,
+            221, 222]).tolist()
     },
     "paviaU": {
         "file": "PaviaU.mat",
@@ -38,7 +70,9 @@ IMAGES = {
         "key_gt": "paviaU_gt",
         "url": "http://www.ehu.eus/ccwintco/uploads/e/ee/PaviaU.mat",
         "url_gt": "http://www.ehu.eus/ccwintco/uploads/5/50/PaviaU_gt.mat",
-        "p": 0.15
+        "p": 0.15,
+        "num_classes": 9,
+        'wl' : np.linspace(430, 860, num=115).tolist()
     },
     "salinas": {
         "file": "Salinas.mat",
@@ -47,7 +81,23 @@ IMAGES = {
         "key_gt": "salinas_gt",
         "url": "http://www.ehu.eus/ccwintco/uploads/f/f1/Salinas.mat",
         "url_gt": "http://www.ehu.eus/ccwintco/uploads/f/fa/Salinas_gt.mat",
-        "p": 0.15
+        "p": 0.15,
+        "num_classes": 16,
+        'wl' : np.linspace(400, 2500, num=224).take([
+            0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18,
+            19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35,
+            36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52,
+            53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64, 65, 66, 67, 68, 69,
+            70, 71, 72, 73, 74, 75, 76, 77, 78, 79, 80, 81, 82, 83, 84, 85, 86,
+            87, 88, 89, 90, 91, 92, 93, 94, 95, 96, 97, 98, 99, 100, 101, 102,
+            108, 112, 113, 114, 115, 116, 117, 118, 119, 120, 121, 122, 123,
+            124, 125, 126, 127, 128, 129, 130, 131, 132, 133, 134, 135, 136,
+            137, 138, 139, 140, 141, 142, 143, 144, 145, 146, 147, 148, 149,
+            150, 151, 152, 167, 168, 169, 170, 171, 172, 173, 174, 175, 176,
+            177, 178, 179, 180, 181, 182, 183, 184, 185, 186, 187, 188, 189,
+            190, 191, 192, 193, 194, 195, 196, 197, 198, 199, 200, 201, 202,
+            203, 204, 205, 206, 207, 208, 209, 210, 211, 212, 213, 214, 215,
+            216, 217, 218, 219, 220, 221, 222]).tolist()
     }
 }
 
@@ -352,8 +402,8 @@ def cross_val_accuracy(model, X_train, y_train, cv=3):
 # FEATURE IMPORTANCE FUNCTIONS
 # =============================================================================
 
-def get_normalized_feature_importance(trained_model):
-    """Returns the normalized feature importance with gain criterion.
+def get_normalised_feature_importance(trained_model):
+    """Returns the normalised feature importance with gain criterion.
     
     Parameters
     ----------
@@ -362,17 +412,17 @@ def get_normalized_feature_importance(trained_model):
     
     Returns
     -------
-    normalized_importance: NumPy array
-        The normalized feature importance.
+    normalised_importance: NumPy array
+        The normalised feature importance.
     
     """
     # Get feature importance with gain criterion
     importance = trained_model.feature_importances_
     
     # Normalize importance to sum up to 1
-    normalized_importance = importance / np.sum(importance)
+    normalised_importance = importance / np.sum(importance)
     
-    return normalized_importance
+    return normalised_importance
 
 def save_feature_importance_heat_map(importance, save_path):
     """
@@ -493,7 +543,7 @@ def main(load_model=True):
         print("Prediction time: {:.3f}s ({}px/s)\n".format(time, speed))
 
         # Save feature importance heat map
-        importance = get_normalized_feature_importance(model)
+        importance = get_normalised_feature_importance(model)
         save_feature_importance_heat_map(importance, "{}/{}_importance.png".format(FEATURE_IMPORTANCES_DIR, image_name))
 
         # Perform feature selection
