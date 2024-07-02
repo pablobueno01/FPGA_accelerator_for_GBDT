@@ -53,7 +53,7 @@ IMAGES = {
 
 # Directories to save the results
 FEATURE_IMPORTANCES_DIR = "feature_importances"
-ACCURACY_GRAPHICS_DIR = "accuracy_graphics"
+ACCURACY_GRAPHICS_DIR = "accuracy_uncertainty_graphics"
 MODELS_DIR = "models"
 
 # PREPROCESSING FUNCTIONS

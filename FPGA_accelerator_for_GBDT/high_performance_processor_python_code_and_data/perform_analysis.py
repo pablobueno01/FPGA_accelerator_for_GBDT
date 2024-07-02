@@ -249,7 +249,7 @@ COLOURS = {"indian_pines_corrected": "#FA9F42",
 def plot_reliability_diagram(output_dir, data, w=7, h=4, colours=COLOURS, num_groups=10):
     """Generates and saves the `reliability diagram` plot
     
-    It saves the plot in `output_dir` in pdf format with the name
+    It saves the plot in `output_dir` in png format with the name
     `reliability_diagram.png`.
     
     Parameters
@@ -324,7 +324,7 @@ def plot_accuracy_vs_uncertainty(output_dir, acc_data, px_data, w=7, h=4, colour
                                  H_limit=2.5, num_groups=25):
     """Generates and saves the `accuracy vs uncertainty` plot
     
-    It saves the plot in `output_dir` in pdf format with the name
+    It saves the plot in `output_dir` in png format with the name
     `accuracy_vs_uncertainty.png`.
     
     Parameters
@@ -427,6 +427,73 @@ def plot_accuracy_vs_uncertainty(output_dir, acc_data, px_data, w=7, h=4, colour
     plt.savefig(os.path.join(output_dir, file_name), bbox_inches='tight')
     print("\nSaved {file_name} in {output_dir}".format(file_name=file_name, output_dir=output_dir))
 
+def plot_class_uncertainty(output_dir, name, avg_Ep, avg_H_Ep, w=7, h=4,
+                           colours=["#2B4162", "#FA9F42", "#0B6E4F"]):
+    """Generates and saves the `class uncertainty` plot of a dataset
+    
+    It saves the plot in `output_dir` in png format with the name
+    `<NAME>_class_uncertainty.png`, where <NAME> is the
+    abbreviation of the dataset name.
+    
+    Parameters
+    ----------
+    output_dir : str
+        Path of the output directory. It can be an absolute path or
+        relative from the execution path.
+    name : str
+        The abbreviation of the dataset name.
+    avg_Ep : ndarray
+        List of the averages of the aleatoric uncertainty (Ep) of each
+        class. The last position also contains the average of the
+        entire image.
+    avg_H_Ep : ndarray
+        List of the averages of the epistemic uncertainty (H - Ep) of
+        each class. The last position also contains the average of the
+        entire image.
+    w : int, optional
+        Width of the plot. Default is 7.
+    h : int, optional
+        Height of the plot. Default is 4.
+    colours : list, optional
+        (default: ["#2B4162", "#FA9F42", "#0B6E4F"])
+        List with the str format of the HEX value of at least three RGB
+        colours.
+    """
+    
+    # Xticks
+    xticks = np.arange(len(avg_Ep))
+    
+    # Generate figure and axis
+    fig, ax = plt.subplots(figsize=(w, h))
+    
+    # Plots
+    ax.bar(xticks, avg_Ep, label="Ep", color=colours[0], zorder=3)
+    ax.bar(xticks, avg_H_Ep, bottom=avg_Ep, label="H - Ep",
+           color=colours[2], zorder=3)
+    
+    # Highlight avg border
+    ax.bar(xticks[-1], avg_Ep[-1] + avg_H_Ep[-1], zorder=2,
+           edgecolor=colours[1], linewidth=4)
+    
+    # Axes label
+    ax.set_xlabel("{} classes".format(name))
+    
+    # X axis labels
+    ax.set_xticks(xticks)
+    xlabels = np.append(xticks[:-1], ["AVG"])
+    ax.set_xticklabels(xlabels)
+    
+    # Grid
+    ax.grid(axis='y', zorder=1)
+    
+    # Legend
+    ax.legend(loc='upper center', ncol=3, bbox_to_anchor=(0.5, 1.2))
+    
+    # Save
+    file_name = "{name}_class_uncertainty.png".format(name=name)
+    plt.savefig(os.path.join(output_dir, file_name), bbox_inches='tight')
+    print("\nSaved {file_name} in {output_dir}".format(file_name=file_name, output_dir=output_dir))
+
 # PREDICTION FUNCTION
 # =============================================================================
 
@@ -485,26 +552,15 @@ def main():
         # Get the individual probabilities of the forest
         individual_probabilities = get_forest_individual_probabilities(trained_forest, X_test_k)
 
-        # Get the average uncertainty values by class
-        # class_H_avg, class_Ep_avg, class_H_Ep_avg = analyse_entropy(individual_probabilities, y_test)
-        # print("\nClass H avg:")
-        # for class_num, avg in enumerate(class_H_avg):
-        #     print("Class {}: {:.3f}".format(class_num, avg))
-        
-        # print("\nClass Ep avg:")
-        # for class_num, avg in enumerate(class_Ep_avg):
-        #     print("Class {}: {:.3f}".format(class_num, avg))
-        
-        # print("\nClass H - Ep avg:")
-        # for class_num, avg in enumerate(class_H_Ep_avg):
-        #     print("Class {}: {:.3f}".format(class_num, avg))
+        # Generate class uncertainty plot
+        _, class_Ep_avg, class_H_Ep_avg = analyse_entropy(individual_probabilities, y_test)
+        plot_class_uncertainty(ACCURACY_GRAPHICS_DIR, image_name, class_Ep_avg, class_H_Ep_avg)
 
         # Generate reliability diagram data
         reliability_data = reliability_diagram(individual_probabilities, y_test)
         reliability_dict[image_name] = reliability_data
 
         # Generate accuracy vs uncertainty data
-        # H_limit = np.log2(len(np.unique(y_test)))
         acc_data, px_data = accuracy_vs_uncertainty(individual_probabilities, y_test)
         acc_dict[image_name] = acc_data
         px_dict[image_name] = px_data
@@ -516,8 +572,6 @@ def main():
 
     # Generate accuracy vs uncertainty plot
     plot_accuracy_vs_uncertainty(ACCURACY_GRAPHICS_DIR, acc_dict, px_dict)
-
-    print("\n")
 
 if __name__ == "__main__":
     main()
