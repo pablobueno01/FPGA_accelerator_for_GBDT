@@ -3,6 +3,7 @@ import scipy.io as spio
 from scipy.interpolate import PchipInterpolator
 from bisect import bisect
 
+
 def HSI2RGB(wY,HSI,ydim,xdim,d,threshold):
 # wY: wavelengths in nm
 # Y : HSI as a (#pixels x #bands) matrix,
@@ -61,7 +62,7 @@ def HSI2RGB(wY,HSI,ydim,xdim,d,threshold):
     z=z[:i]
     
     # Compute k
-    k = 1/np.trapz(y * I, wY)
+    k = 1.0/np.trapz(y * I, wY)
     
     # Compute X,Y & Z for image
     X = k * np.trapz(np.dot(HSI, np.diag(I * x)), wY, axis=1)
@@ -105,7 +106,7 @@ def HSI2RGB(wY,HSI,ydim,xdim,d,threshold):
             y[y>th]=th
             y=y/th
             sRGB[idx,:]=y
-        
+   
     R = np.reshape(sRGB[0,:],[ydim,xdim]);
     G = np.reshape(sRGB[1,:],[ydim,xdim]);
     B = np.reshape(sRGB[2,:],[ydim,xdim]);

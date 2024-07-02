@@ -167,11 +167,11 @@ def load_image(image_info, data_path="./data"):
     
     return X, y
 
-def pixel_classification_preprocessing(X, y):
+def pixel_classification_preprocessing(X, y, only_labelled=True):
     """Preprocesses hyperspectral images for pixel classification.
     
     Reshapes the image and the ground truth data, keeps only the labeled
-    pixels and renames the classes to ordered integers from 0.
+    pixels if only_labelled is True, and renames the classes to ordered integers from 0.
     
     Parameters
     ----------
@@ -179,24 +179,27 @@ def pixel_classification_preprocessing(X, y):
         The image data.
     y: NumPy array
         The ground truth data.
+    only_labelled: bool, optional (default True)
+        Whether to keep only the labeled pixels or not.
     
     Returns
     -------
     X: NumPy array
-        The prepreocessed pixels.
+        The preprocessed pixels.
     y: NumPy array
-        The prepreocessed labels.
+        The preprocessed labels.
     
     """
     # Reshape them to ignore spatiality
     X = X.reshape(-1, X.shape[2])
     y = y.reshape(-1)
     
-    # Keep only labeled pixels
-    X = X[y > 0, :]
-    y = y[y > 0]
+    # Keep only labeled pixels if only_labelled is True
+    if only_labelled:
+        X = X[y > 0, :]
+        y = y[y > 0]
     
-    # Rename clases to ordered integers from 0
+    # Rename classes to ordered integers from 0
     for new_class_num, old_class_num in enumerate(np.unique(y)):
         y[y == old_class_num] = new_class_num
     

@@ -83,7 +83,7 @@ def _expected_entropy(predictions):
                 class_sum += val * math.log(val)
             entropy[p] -= class_sum
     
-    return float(entropy)/num_tests
+    return entropy/num_tests
 
 # ANALYSIS FUNCTIONS
 # =============================================================================
@@ -645,14 +645,14 @@ def plot_maps(output_dir, name, shape, num_classes, wl, img, y, pred_map,
         Array with the averages of the bayesian predictions.
     H_map : ndarray
         Array with the global uncertainty (H) values.
-    colours : list of RGB tuples
+    colours : list of RGB tuples, optional (default: MAP_COLOURS)
         List of colours for the prediction map classes.
-    gradients : list of RGB tuples
+    gradients : list of RGB tuples, optional (default: MAP_GRADIENTS)
         List of colours for the uncertainty map groups of values.
-    max_H : float, optional (default: 1.5)
+    max_H : float, optional (default: 2.5)
         The max value of the range of uncertainty for the uncertainty
         map.
-    slots : int, optional (default: 15)
+    slots : int, optional (default: 25)
         Number of groups to divide uncertainty map values.
     """
     
