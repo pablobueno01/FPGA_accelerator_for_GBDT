@@ -1,3 +1,4 @@
+from __future__ import division
 import numpy as np
 import scipy.io as spio
 from scipy.interpolate import PchipInterpolator
@@ -62,7 +63,7 @@ def HSI2RGB(wY,HSI,ydim,xdim,d,threshold):
     z=z[:i]
     
     # Compute k
-    k = 1.0/np.trapz(y * I, wY)
+    k = 1/np.trapz(y * I, wY)
     
     # Compute X,Y & Z for image
     X = k * np.trapz(np.dot(HSI, np.diag(I * x)), wY, axis=1)
@@ -75,7 +76,7 @@ def HSI2RGB(wY,HSI,ydim,xdim,d,threshold):
     M = np.array([[3.2404542, -1.5371385, -0.4985314],
                   [-0.9692660, 1.8760108, 0.0415560],
                   [0.0556434, -0.2040259, 1.0572252]]);
-    sRGB = np.dot(M, XYZ)
+    sRGB = np.dot(M, XYZ);
     
     # Gamma correction
     gamma_map = sRGB >  0.0031308;
@@ -84,7 +85,7 @@ def HSI2RGB(wY,HSI,ydim,xdim,d,threshold):
     # Note: RL, GL or BL values less than 0 or greater than 1 are clipped to 0 and 1.
     sRGB[sRGB > 1] = 1;
     sRGB[sRGB < 0] = 0;
-    
+
     if threshold:
         for idx in range(3):
             y = sRGB[idx,:];
@@ -106,7 +107,7 @@ def HSI2RGB(wY,HSI,ydim,xdim,d,threshold):
             y[y>th]=th
             y=y/th
             sRGB[idx,:]=y
-   
+        
     R = np.reshape(sRGB[0,:],[ydim,xdim]);
     G = np.reshape(sRGB[1,:],[ydim,xdim]);
     B = np.reshape(sRGB[2,:],[ydim,xdim]);

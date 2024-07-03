@@ -1,5 +1,6 @@
 #!/usr/bin/env python2
 # -*- coding: utf-8 -*-
+from __future__ import division
 from inference_reduced import *
 from perform_analysis import *
 from HSI2RGB import HSI2RGB
