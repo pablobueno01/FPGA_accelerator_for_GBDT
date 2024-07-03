@@ -119,18 +119,25 @@ MAP_COLOURS = [
     (245, 130, 48), (70, 240, 240), (240, 50, 230), (250, 190, 212),
     (0, 128, 128), (220, 190, 255), (170, 110, 40), (255, 250, 200),
     (128, 0, 0), (170, 255, 195), (0, 0, 128), (128, 128, 128)]
+
 MAP_GRADIENTS = [
     (77, 230, 54), (135, 229, 53), (193, 229, 52), (229, 206, 51),
     (228, 146, 50), (228, 86, 49), (228, 48, 71), (227, 47, 130),
     (227, 46, 189), (204, 45, 227), (143, 44, 226), (81, 43, 226),
-    (42, 64, 226), (41, 125, 225), (40, 185, 225), (39, 225, 202),
-    (38, 225, 142), (37, 225, 82), (36, 225, 44), (82, 225, 43),
-    (142, 225, 42), (202, 225, 41), (225, 185, 40), (225, 125, 39),
-    (225, 64, 38)
-]
+    (42, 64, 226), (41, 125, 225), (40, 185, 225), (39, 225, 202)]
+# Gradient colours from green juice to palatinate blue (https://colornamer.robertcooper.me/)
+# MAP_GRADIENTS = [
+#     (77, 230, 54), (106, 229, 53), (135, 229, 53), (164, 229, 52),
+#     (193, 229, 52), (211, 217, 51), (229, 206, 51), (228, 176, 50),
+#     (228, 146, 50), (228, 115, 49), (228, 86, 49), (228, 67, 60),
+#     (228, 48, 71), (227, 47, 100), (227, 47, 130), (227, 46, 159),
+#     (227, 46, 189), (215, 45, 207), (204, 45, 227), (173, 44, 226),
+#     (143, 44, 226), (111, 43, 226), (81, 43, 226), (61, 53, 226),
+#     (42, 64, 226)
+# ]
 
 def plot_maps(output_dir, name, shape, num_classes, wl, img, y, pred_map,
-              H_map, colours=MAP_COLOURS, gradients=MAP_GRADIENTS, max_H=0, slots=0):
+              H_map, colours=MAP_COLOURS, gradients=MAP_GRADIENTS, max_H=0, slots=15):
     """Generates and saves the `uncertainty map` plot of a dataset
     
     This plot shows an RGB representation of the hyperspectral image,
@@ -167,7 +174,7 @@ def plot_maps(output_dir, name, shape, num_classes, wl, img, y, pred_map,
         List of colours for the prediction map classes.
     gradients : list of RGB tuples, optional (default: MAP_GRADIENTS)
         List of colours for the uncertainty map groups of values.
-    slots : int, optional (default: 0)
+    slots : int, optional (default: 15)
         Number of groups to divide uncertainty map values. If set to 0,
         `slots` will be set to `max_H * 10`.
     max_H : float, optional (default: 0)
@@ -180,7 +187,10 @@ def plot_maps(output_dir, name, shape, num_classes, wl, img, y, pred_map,
     # -------------------------------------------------------------------------
     
     # Select shape and size depending on the dataset
-    if name in ["indian_pines_corrected", "KSC"]:
+    if name=="indian_pines_corrected":
+        fig, ((ax1, ax2), (ax3, ax4)) = plt.subplots(2, 2)
+        fig.set_size_inches(8*shape[1]/96, 8*shape[0]/96)
+    elif name=="KSC":
         fig, ((ax1, ax2), (ax3, ax4)) = plt.subplots(2, 2)
         fig.set_size_inches(2*shape[1]/96, 2*shape[0]/96)
     else:
@@ -208,6 +218,7 @@ def plot_maps(output_dir, name, shape, num_classes, wl, img, y, pred_map,
     # Create and show RGB image (D65 illuminant and 0.002 threshold)
     RGB_img = HSI2RGB(wl, img, shape[0], shape[1], 65, 0.002)
     ax1.imshow(RGB_img)
+    ax1.set_title("RGB Image")
     
     # GROUND TRUTH GENERATION
     # -------------------------------------------------------------------------
@@ -215,6 +226,7 @@ def plot_maps(output_dir, name, shape, num_classes, wl, img, y, pred_map,
     # Generate and show coloured ground truth
     gt = _map_to_img(y, shape, [(0, 0, 0)] + colours[:num_classes])
     ax2.imshow(gt)
+    ax2.set_title("Ground Truth")
     
     # PREDICTION MAP GENERATION
     # -------------------------------------------------------------------------
@@ -222,6 +234,7 @@ def plot_maps(output_dir, name, shape, num_classes, wl, img, y, pred_map,
     # Generate and show coloured prediction map
     pred_H_img = _map_to_img(pred_map, shape, colours[:num_classes])
     ax3.imshow(pred_H_img)
+    ax3.set_title("Prediction Map")
     
     # UNCERTAINTY MAP GENERATION
     # -------------------------------------------------------------------------
@@ -237,6 +250,7 @@ def plot_maps(output_dir, name, shape, num_classes, wl, img, y, pred_map,
         slots = int(max_H * 10)
     H_img = _map_to_img(u_map, shape, gradients[:slots])
     ax4.imshow(H_img)
+    ax4.set_title("Uncertainty Map")
     
     # PLOT COMBINED IMAGE
     # -------------------------------------------------------------------------
