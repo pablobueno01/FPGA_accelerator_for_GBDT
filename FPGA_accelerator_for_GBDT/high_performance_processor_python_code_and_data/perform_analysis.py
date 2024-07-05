@@ -510,8 +510,13 @@ def get_forest_individual_probabilities(trained_forest, X_test):
 # MAIN FUNCTION
 # =============================================================================
 
-def main():
+def main(full_model=False):
 
+    if (full_model):
+        graphics_dir = "{}/full".format(ACCURACY_GRAPHICS_DIR)
+    else:
+        graphics_dir = "{}/forest".format(ACCURACY_GRAPHICS_DIR)
+        
     # Dictionaries to store the data
     reliability_dict = {}
     acc_dict = {}
@@ -537,24 +542,28 @@ def main():
         _, _, X_test, y_test = separate_pixels(X, y, train_size)
         print("Test pixels: {}".format(X_test.shape[0]))
 
-        # Obtain the reduced data
-        top_k_ft_path = next((os.path.join(FEATURE_IMPORTANCES_DIR, file) for file in os.listdir(FEATURE_IMPORTANCES_DIR) if file.startswith(image_name + "_top_")), None)
-        k = int(top_k_ft_path.split("_features.npy")[0].split("_top_")[-1]) # Number of features
-        top_k_features = np.load(top_k_ft_path)
-        X_test_k = X_test[:, top_k_features]
+        if (full_model):
+            trained_model = joblib.load("{}/{}_model.joblib".format(MODELS_DIR, image_name))
+            trained_forest = [trained_model]
+            print('\nFull model with {} features'.format(X_test.shape[1]))
+        else:
+            # Obtain the reduced data
+            top_k_ft_path = next((os.path.join(FEATURE_IMPORTANCES_DIR, file) for file in os.listdir(FEATURE_IMPORTANCES_DIR) if file.startswith(image_name + "_top_")), None)
+            k = int(top_k_ft_path.split("_features.npy")[0].split("_top_")[-1]) # Number of features
+            top_k_features = np.load(top_k_ft_path)
+            X_test = X_test[:, top_k_features]
+            # Load the trained forest model
+            trained_forest = joblib.load("{}/{}_forest_models.joblib".format(MODELS_DIR, image_name))
+            print('\nForest with {} models and {} features'.format(FOREST_SIZE, k))
 
-        # -------------FOREST MODEL ANALYSIS-------------
-        print('\nForest with {} trees and {} features'.format(FOREST_SIZE, k))
-
-        # Load the trained forest model
-        trained_forest = joblib.load("{}/{}_forest_models.joblib".format(MODELS_DIR, image_name))
-
+        # -------------MODEL ANALYSIS-------------
+        
         # Get the individual probabilities of the forest
-        individual_probabilities = get_forest_individual_probabilities(trained_forest, X_test_k)
+        individual_probabilities = get_forest_individual_probabilities(trained_forest, X_test)
 
         # Generate class uncertainty plot
         _, class_Ep_avg, class_H_Ep_avg = analyse_entropy(individual_probabilities, y_test)
-        plot_class_uncertainty(ACCURACY_GRAPHICS_DIR, image_name, class_Ep_avg, class_H_Ep_avg)
+        plot_class_uncertainty(graphics_dir, image_name, class_Ep_avg, class_H_Ep_avg)
 
         # Generate reliability diagram data
         reliability_data = reliability_diagram(individual_probabilities, y_test)
@@ -568,10 +577,10 @@ def main():
     print("\n--------------------------------")
 
     # Generate reliability diagram plot
-    plot_reliability_diagram(ACCURACY_GRAPHICS_DIR, reliability_dict)
+    plot_reliability_diagram(graphics_dir, reliability_dict)
 
     # Generate accuracy vs uncertainty plot
-    plot_accuracy_vs_uncertainty(ACCURACY_GRAPHICS_DIR, acc_dict, px_dict)
+    plot_accuracy_vs_uncertainty(graphics_dir, acc_dict, px_dict)
 
 if __name__ == "__main__":
-    main()
+    main(True)
