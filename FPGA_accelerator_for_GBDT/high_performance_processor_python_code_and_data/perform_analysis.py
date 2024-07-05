@@ -545,13 +545,14 @@ def main(full_model=False):
         if (full_model):
             trained_model = joblib.load("{}/{}_model.joblib".format(MODELS_DIR, image_name))
             trained_forest = [trained_model]
+            X_test_k = X_test
             print('\nFull model with {} features'.format(X_test.shape[1]))
         else:
             # Obtain the reduced data
             top_k_ft_path = next((os.path.join(FEATURE_IMPORTANCES_DIR, file) for file in os.listdir(FEATURE_IMPORTANCES_DIR) if file.startswith(image_name + "_top_")), None)
             k = int(top_k_ft_path.split("_features.npy")[0].split("_top_")[-1]) # Number of features
             top_k_features = np.load(top_k_ft_path)
-            X_test = X_test[:, top_k_features]
+            X_test_k = X_test[:, top_k_features]
             # Load the trained forest model
             trained_forest = joblib.load("{}/{}_forest_models.joblib".format(MODELS_DIR, image_name))
             print('\nForest with {} models and {} features'.format(FOREST_SIZE, k))
@@ -559,7 +560,7 @@ def main(full_model=False):
         # -------------MODEL ANALYSIS-------------
         
         # Get the individual probabilities of the forest
-        individual_probabilities = get_forest_individual_probabilities(trained_forest, X_test)
+        individual_probabilities = get_forest_individual_probabilities(trained_forest, X_test_k)
 
         # Generate class uncertainty plot
         _, class_Ep_avg, class_H_Ep_avg = analyse_entropy(individual_probabilities, y_test)

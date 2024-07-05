@@ -266,7 +266,12 @@ def plot_maps(output_dir, name, shape, num_classes, wl, img, y, pred_map,
 # MAIN FUNCTION
 # =============================================================================
 
-def main():
+def main(full_model=False):
+
+    if (full_model):
+        maps_dir = "{}/full".format(MAPS_DIR)
+    else:
+        maps_dir = "{}/forest".format(MAPS_DIR)
 
     # For each image
     for img in IMAGES:
@@ -284,14 +289,18 @@ def main():
         # Preprocess image
         X, y = pixel_classification_preprocessing(X, y, only_labelled=False)
 
-        # Obtain the reduced data
-        top_k_ft_path = next((os.path.join(FEATURE_IMPORTANCES_DIR, file) for file in os.listdir(FEATURE_IMPORTANCES_DIR) if file.startswith(image_name + "_top_")), None)
-        k = int(top_k_ft_path.split("_features.npy")[0].split("_top_")[-1]) # Number of features
-        top_k_features = np.load(top_k_ft_path)
-        X_k = X[:, top_k_features]
-
-        # Load the trained forest model
-        trained_forest = joblib.load("{}/{}_forest_models.joblib".format(MODELS_DIR, image_name))
+        if (full_model):
+            trained_model = joblib.load("{}/{}_model.joblib".format(MODELS_DIR, image_name))
+            trained_forest = [trained_model]
+            X_k = X
+        else:
+            # Obtain the reduced data
+            top_k_ft_path = next((os.path.join(FEATURE_IMPORTANCES_DIR, file) for file in os.listdir(FEATURE_IMPORTANCES_DIR) if file.startswith(image_name + "_top_")), None)
+            k = int(top_k_ft_path.split("_features.npy")[0].split("_top_")[-1]) # Number of features
+            top_k_features = np.load(top_k_ft_path)
+            X_k = X[:, top_k_features]
+            # Load the trained forest model
+            trained_forest = joblib.load("{}/{}_forest_models.joblib".format(MODELS_DIR, image_name))
 
         # Get the individual probabilities of the forest
         individual_probabilities = get_forest_individual_probabilities(trained_forest, X_k)
@@ -301,10 +310,10 @@ def main():
         X_normalised = X_normalised / X_normalised.max()
         pred_map = np.mean(individual_probabilities, axis=0).argmax(axis=1)
         H_map = predictive_entropy(individual_probabilities)
-        plot_maps(MAPS_DIR, image_name, shape, image_info["num_classes"], image_info['wl'], X_normalised, y,
+        plot_maps(maps_dir, image_name, shape, image_info["num_classes"], image_info['wl'], X_normalised, y,
                   pred_map, H_map)
         
     print("\n--------------------------------")
 
 if __name__ == "__main__":
-    main()
+    main(True)
