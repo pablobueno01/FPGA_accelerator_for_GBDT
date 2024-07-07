@@ -1,10 +1,10 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 import os
-import sys
 import time
 import tensorflow as tf
-from argparse import ArgumentParser, RawDescriptionHelpFormatter
+import tensorflow_probability as tfp
+from tensorflow_probability import distributions as dist
 from inference_reduced import *
 
 # PRINT CALLBACK FUNCTION
@@ -81,14 +81,14 @@ class _PrintCallback(tf.keras.callbacks.Callback):
         
         # Print log message
         if last:
-            print("\n--- TRAIN END AT EPOCH {} ---".format(self.epoch))
-            print("TRAINING TIME: {} seconds".format(time))
+            print(f"\n--- TRAIN END AT EPOCH {self.epoch} ---")
+            print(f"TRAINING TIME: {time} seconds")
             end = "\n"
         else:
-            print("\nCURRENT TIME: {} seconds".format(time))
+            print(f"\nCURRENT TIME: {time} seconds")
             end = ''
-        print("Epoch loss ({}): {}".format(self.epoch, loss))
-        print("Accuracy: {}".format(logs.get('val_accuracy')), end=end, flush=True)
+        print(f"Epoch loss ({self.epoch}): {loss}")
+        print(f"Accuracy: {logs.get('val_accuracy')}", end=end, flush=True)
     
     def on_train_begin(self, logs={}):
         """Called at the beginning of training
@@ -223,11 +223,8 @@ def get_model(dataset_size, num_features, num_classes, l1_n, l2_n,
 # MAIN FUNCTION
 # =============================================================================
 
-def train(name, epochs, period, l1_n=32, l2_n=16, p_train=0.15, learning_rate=1.0e-2):
+def train(name, epochs, period, l1_n=32, l2_n=16, p_train=0.5, learning_rate=1.0e-2):
     """Trains a bayesian model for a hyperspectral image dataset
-    
-    The trained model and the checkouts are saved in the `MODELS_DIR`
-    defined in `config.py`.
     
     Parameters
     ----------
@@ -241,13 +238,10 @@ def train(name, epochs, period, l1_n=32, l2_n=16, p_train=0.15, learning_rate=1.
         Flag to activate mixed classes training.
     """
     
-    # Input, output and dataset references
-    base_output_dir = "./bnn_results/models"
-    datasets = IMAGES
-    
     # DATASET INFORMATION
     # -------------------------------------------------------------------------
     
+    datasets = IMAGES
     dataset = datasets[name]
     
     # Extract dataset classes and features
@@ -255,8 +249,7 @@ def train(name, epochs, period, l1_n=32, l2_n=16, p_train=0.15, learning_rate=1.
     num_features = dataset['num_features']
     
     # Generate output dir
-    output_dir = "{}_{}-{}model_{}train_{}lr".format(name, l1_n, l2_n, p_train, learning_rate)
-    output_dir = os.path.join(base_output_dir, output_dir)
+    output_dir = os.path.join("bnn_results", "models", f"{name}_{l1_n}-{l2_n}model_{p_train}train_{learning_rate}lr")
     if not os.path.isdir(output_dir):
         os.makedirs(output_dir)
     
@@ -270,8 +263,7 @@ def train(name, epochs, period, l1_n=32, l2_n=16, p_train=0.15, learning_rate=1.
     X, y = pixel_classification_preprocessing(X, y)
     
     # Separate data into train and test sets
-    X_train, y_train, X_test, _ = separate_pixels(X, y, dataset["p"])
-    print("Train pixels: {}\tTest pixels: {}".format(X_train.shape[0], X_test.shape[0]))
+    X_train, y_train, X_test, _ = separate_pixels(X, y, p_train)
     
     # TRAIN MODEL
     # -------------------------------------------------------------------------
@@ -281,7 +273,7 @@ def train(name, epochs, period, l1_n=32, l2_n=16, p_train=0.15, learning_rate=1.
                if "_" in d]
     if trained:
         initial_epoch = max(trained)
-        last_file = os.path.join(output_dir, "epoch_{}".format(initial_epoch))
+        last_file = os.path.join(output_dir, f"epoch_{initial_epoch}")
         model = tf.keras.models.load_model(last_file)
     else:
         initial_epoch = 0
@@ -289,25 +281,25 @@ def train(name, epochs, period, l1_n=32, l2_n=16, p_train=0.15, learning_rate=1.
         model = get_model(dataset_size, num_features, num_classes, l1_n, l2_n,
                           learning_rate)
         
-    # PRINT CALLBACK
-    print_callback = _PrintCallback(print_epoch=period,
-                                    losses_avg_no=max(1, period//10),
-                                    start_epoch=initial_epoch)
+    # # PRINT CALLBACK
+    # print_callback = _PrintCallback(print_epoch=period,
+    #                                 losses_avg_no=max(1, period//10),
+    #                                 start_epoch=initial_epoch)
     
-    # CHECKPOINT CALLBACK
-    file = os.path.join(output_dir, "epoch_{epoch}")
-    checkpoint = tf.keras.callbacks.ModelCheckpoint(filepath=file,
-                                                    monitor='val_accuracy',
-                                                    verbose=1,
-                                                    mode='max',
-                                                    save_best_only=False,
-                                                    period=period)
+    # # CHECKPOINT CALLBACK
+    # file = os.path.join(output_dir, "epoch_{epoch}")
+    # checkpoint = tf.keras.callbacks.ModelCheckpoint(filepath=file,
+    #                                                 monitor='val_accuracy',
+    #                                                 verbose=1,
+    #                                                 mode='max',
+    #                                                 save_best_only=False,
+    #                                                 period=period)
     
     # Print start training message
     msg = "\n### Starting the {} training on epoch {}"
     print(msg.format(name, initial_epoch))
     print('#'*80)
-    print("\nOUTPUT DIR: {}".format(output_dir))
+    print(f"\nOUTPUT DIR: {output_dir}", flush=True)
     
     # Training
     model.fit(X_train,
@@ -316,7 +308,7 @@ def train(name, epochs, period, l1_n=32, l2_n=16, p_train=0.15, learning_rate=1.
               epochs=epochs, 
               verbose=0,
               use_multiprocessing=True,
-              callbacks=[print_callback, checkpoint],
+              #callbacks=[print_callback, checkpoint],
               validation_split=0.1,
               validation_freq=25)
     
@@ -325,5 +317,7 @@ def train(name, epochs, period, l1_n=32, l2_n=16, p_train=0.15, learning_rate=1.
 
 if __name__ == "__main__":
     
-    for image in IMAGES.keys():
-        train(image, 10000, 1000)
+    for img in IMAGES:
+        image_info = IMAGES[img]
+        image_epochs = image_info["epochs"]
+        train(img, image_epochs, 1000)
