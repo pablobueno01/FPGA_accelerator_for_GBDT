@@ -510,12 +510,9 @@ def get_forest_individual_probabilities(trained_forest, X_test):
 # MAIN FUNCTION
 # =============================================================================
 
-def main(full_model=True):
+def main(model_type):
 
-    if (full_model):
-        graphics_dir = "{}/full".format(ACCURACY_GRAPHICS_DIR)
-    else:
-        graphics_dir = "{}/forest".format(ACCURACY_GRAPHICS_DIR)
+    graphics_dir = "{}/{}".format(ACCURACY_GRAPHICS_DIR, model_type)
         
     # Dictionaries to store the data
     reliability_dict = {}
@@ -542,11 +539,21 @@ def main(full_model=True):
         _, _, X_test, y_test = separate_pixels(X, y, train_size)
         print("Test pixels: {}".format(X_test.shape[0]))
 
-        if (full_model):
+        if (model_type == 'full'):
             trained_model = joblib.load("{}/{}_model.joblib".format(MODELS_DIR, image_name))
             trained_forest = [trained_model]
             X_test_k = X_test
             print('\nFull model with {} features'.format(X_test.shape[1]))
+        elif (model_type == 'reduced'):
+            # Obtain the reduced data
+            top_k_ft_path = next((os.path.join(FEATURE_IMPORTANCES_DIR, file) for file in os.listdir(FEATURE_IMPORTANCES_DIR) if file.startswith(image_name + "_top_")), None)
+            k = int(top_k_ft_path.split("_features.npy")[0].split("_top_")[-1]) # Number of features
+            top_k_features = np.load(top_k_ft_path)
+            X_test_k = X_test[:, top_k_features]
+            # Load the trained reduced model
+            trained_model = joblib.load("{}/{}_model_{}.joblib".format(MODELS_DIR, image_name, k))
+            trained_forest = [trained_model]
+            print("\nReduced model with {} features:".format(k))
         else:
             # Obtain the reduced data
             top_k_ft_path = next((os.path.join(FEATURE_IMPORTANCES_DIR, file) for file in os.listdir(FEATURE_IMPORTANCES_DIR) if file.startswith(image_name + "_top_")), None)
@@ -584,4 +591,11 @@ def main(full_model=True):
     plot_accuracy_vs_uncertainty(graphics_dir, acc_dict, px_dict)
 
 if __name__ == "__main__":
-    main(True)
+    if len(sys.argv) > 1:
+        arg = sys.argv[1]
+        if arg == 'full' or arg == 'reduced' or arg == 'forest':
+            main(arg)
+        else:
+            print("Error: Invalid argument. Please use 'full', 'reduced', or 'forest'.")
+    else:
+        main('full')

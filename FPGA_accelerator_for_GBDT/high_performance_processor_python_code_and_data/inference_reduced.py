@@ -528,7 +528,7 @@ def feature_selection(importance, X_train, y_train, accuracy, image_name, th_acc
 # MAIN FUNCTION
 # =============================================================================
 
-def main(load_model=False):
+def main(load_model=True):
     
     # For each image
     for img in IMAGES:
