@@ -129,7 +129,7 @@ def reliability_diagram(predictions, y_test, num_groups=10):
     
     return result
 
-def accuracy_vs_uncertainty(predictions, y_test, H_limit=2.5, num_groups=25):
+def accuracy_vs_uncertainty(predictions, y_test, H_limit=2.1, num_groups=21):
     """Generates the `accuracy vs uncertainty` data
     
     Parameters
@@ -321,7 +321,7 @@ def plot_reliability_diagram(output_dir, data, w=7, h=4, colours=COLOURS, num_gr
     print("\nSaved {file_name} in {output_dir}".format(file_name=file_name, output_dir=output_dir))
 
 def plot_accuracy_vs_uncertainty(output_dir, acc_data, px_data, w=7, h=4, colours=COLOURS,
-                                 H_limit=2.5, num_groups=25):
+                                 H_limit=2.1, num_groups=21):
     """Generates and saves the `accuracy vs uncertainty` plot
     
     It saves the plot in `output_dir` in png format with the name
@@ -510,7 +510,7 @@ def get_forest_individual_probabilities(trained_forest, X_test):
 # MAIN FUNCTION
 # =============================================================================
 
-def main(full_model=False):
+def main(full_model=True):
 
     if (full_model):
         graphics_dir = "{}/full".format(ACCURACY_GRAPHICS_DIR)
