@@ -20,7 +20,7 @@ IMAGES = {
         "key_gt": "indian_pines_gt",
         "url": "http://www.ehu.eus/ccwintco/uploads/6/67/Indian_pines_corrected.mat",
         "url_gt": "http://www.ehu.eus/ccwintco/uploads/c/c4/Indian_pines_gt.mat",
-        "p": 0.15,
+        "p": 0.5,
         "num_classes": 16,
         'num_features': 200,
         'wl' : np.linspace(400, 2500, num=224).take([
@@ -47,7 +47,7 @@ IMAGES = {
         "key_gt": "KSC_gt",
         "url": "http://www.ehu.es/ccwintco/uploads/2/26/KSC.mat",
         "url_gt": "http://www.ehu.es/ccwintco/uploads/a/a6/KSC_gt.mat",
-        "p": 0.15,
+        "p": 0.5,
         "num_classes": 13,
         'num_features': 176,
         'wl' : np.linspace(400, 2500, num=224).take([
@@ -74,7 +74,7 @@ IMAGES = {
         "key_gt": "paviaU_gt",
         "url": "http://www.ehu.eus/ccwintco/uploads/e/ee/PaviaU.mat",
         "url_gt": "http://www.ehu.eus/ccwintco/uploads/5/50/PaviaU_gt.mat",
-        "p": 0.15,
+        "p": 0.5,
         "num_classes": 9,
         'num_features': 103,
         'wl' : np.linspace(430, 860, num=115).tolist(),
@@ -87,7 +87,7 @@ IMAGES = {
         "key_gt": "salinas_gt",
         "url": "http://www.ehu.eus/ccwintco/uploads/f/f1/Salinas.mat",
         "url_gt": "http://www.ehu.eus/ccwintco/uploads/f/fa/Salinas_gt.mat",
-        "p": 0.15,
+        "p": 0.5,
         "num_classes": 16,
         'num_features': 204,
         'wl' : np.linspace(400, 2500, num=224).take([
@@ -207,9 +207,9 @@ def pixel_classification_preprocessing(X, y, only_labelled=True):
         X = X[y > 0, :]
         y = y[y > 0]
     
-    # Rename classes to ordered integers from 0
-    for new_class_num, old_class_num in enumerate(np.unique(y)):
-        y[y == old_class_num] = new_class_num
+        # Rename classes to ordered integers from 0
+        for new_class_num, old_class_num in enumerate(np.unique(y)):
+            y[y == old_class_num] = new_class_num
     
     return X, y
 
@@ -217,7 +217,7 @@ def random_index(X, y, seed=69):
   assert len(X) == len(y)
   return np.random.RandomState(seed=seed).permutation(len(X))
 
-def separate_pixels(X, y, p):
+def separate_pixels(X, y, p, use_sklearn=True):
     """Separate pixels and labels into train and test sets.
     
     Input data has to be preprocessed so classes are consecutively
@@ -244,6 +244,14 @@ def separate_pixels(X, y, p):
         Structure corresponding to the test labels.
     
     """
+
+    if use_sklearn:
+        from sklearn.model_selection import train_test_split
+        (X_train, X_test,
+        y_train, y_test) = train_test_split(X, y, test_size=1-p,
+                                         random_state=35, stratify=y)
+        return X_train, y_train, X_test, y_test
+    
     # Shuffle input data
     index = random_index(X, y)
     X = X[index]
@@ -520,7 +528,7 @@ def feature_selection(importance, X_train, y_train, accuracy, image_name, th_acc
 # MAIN FUNCTION
 # =============================================================================
 
-def main(load_model=True):
+def main(load_model=False):
     
     # For each image
     for img in IMAGES:
