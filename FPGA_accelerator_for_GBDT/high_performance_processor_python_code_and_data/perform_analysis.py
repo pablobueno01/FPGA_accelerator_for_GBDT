@@ -138,9 +138,9 @@ def accuracy_vs_uncertainty(predictions, y_test, H_limit=2.1, num_groups=21):
         Array with the bayesian predictions.
     y_test : ndarray
         Testing data set labels.
-    H_limit : float, optional (default: 2.5)
+    H_limit : float, optional (default: 2.1)
         The max value of the range of uncertainty.
-    num_groups : int, optional (default: 25)
+    num_groups : int, optional (default: 21)
         Number of groups in which the prediction will be divided
         according to their uncertainty.
     
@@ -346,9 +346,9 @@ def plot_accuracy_vs_uncertainty(output_dir, acc_data, px_data, w=7, h=4, colour
     colours : dict, optional (default: COLOURS)
         It contains the HEX value of the RGB colour of each dataset.
         The key must be the dataset name abbreviation.
-    H_limit : float, optional (default: 2.5)
+    H_limit : float, optional (default: 2.1)
         The max value of the range of uncertainty for the plot.
-    num_groups : int, optional (default: 25)
+    num_groups : int, optional (default: 21)
         Number of groups to divide xticks labels.
     """
     

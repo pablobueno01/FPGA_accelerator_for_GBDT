@@ -137,7 +137,7 @@ MAP_GRADIENTS = [
 # ]
 
 def plot_maps(output_dir, name, shape, num_classes, wl, img, y, pred_map,
-              H_map, colours=MAP_COLOURS, gradients=MAP_GRADIENTS, max_H=0, slots=15):
+              H_map, colours=MAP_COLOURS, gradients=MAP_GRADIENTS, max_H=1.5, slots=15):
     """Generates and saves the `uncertainty map` plot of a dataset
     
     This plot shows an RGB representation of the hyperspectral image,
@@ -177,7 +177,7 @@ def plot_maps(output_dir, name, shape, num_classes, wl, img, y, pred_map,
     slots : int, optional (default: 15)
         Number of groups to divide uncertainty map values. If set to 0,
         `slots` will be set to `max_H * 10`.
-    max_H : float, optional (default: 0)
+    max_H : float, optional (default: 1.5)
         The max value of the range of uncertainty for the uncertainty
         map. The `0` value will use the logarithm of `num_classes` as
         it is the theoretical maximum value of the uncertainty.
@@ -266,7 +266,7 @@ def plot_maps(output_dir, name, shape, num_classes, wl, img, y, pred_map,
 # MAIN FUNCTION
 # =============================================================================
 
-def main(full_model=False):
+def main(full_model=True):
 
     if (full_model):
         maps_dir = "{}/full".format(MAPS_DIR)
