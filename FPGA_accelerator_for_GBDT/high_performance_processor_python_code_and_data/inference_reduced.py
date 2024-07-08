@@ -401,7 +401,7 @@ def lightgbm_predict(trained_model, X_test, y_test, num_iter=200,
     
     return time, speed, accuracy
 
-def cross_val_accuracy(model, X_train, y_train, cv=3):
+def cross_val_accuracy(model, X_train, y_train, cv=5):
     """
     Calculates the accuracy of a model using cross-validation.
 
@@ -474,7 +474,7 @@ def save_feature_importance_heat_map(importance, save_path):
     plt.savefig(save_path)
     plt.close()
 
-def feature_selection(importance, X_train, y_train, accuracy, image_name, th_acc=0.025):
+def feature_selection(importance, X_train, y_train, accuracy, image_name, th_acc=0.01):
     """
     Perform feature selection based on feature importance scores.
 
