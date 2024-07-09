@@ -474,7 +474,7 @@ def save_feature_importance_heat_map(importance, save_path):
     plt.savefig(save_path)
     plt.close()
 
-def feature_selection(importance, X_train, y_train, accuracy, image_name, th_acc=0.01):
+def feature_selection(importance, X_train, y_train, accuracy, image_name, th_acc=0.025):
     """
     Perform feature selection based on feature importance scores.
 
@@ -520,7 +520,7 @@ def feature_selection(importance, X_train, y_train, accuracy, image_name, th_acc
     plt.ylabel('Accuracy')
     plt.title('Cross-Validation Accuracy vs Number of Features')
     plt.legend()
-    plt.savefig('{}/{}_accuracy_vs_num_features.png'.format(ACCURACY_GRAPHICS_DIR, image_name))
+    plt.savefig('{}/{}_accuracy_vs_num_features_{}.png'.format(ACCURACY_GRAPHICS_DIR, image_name, th_acc))
     plt.close()
     
     return k, top_k_features, accuracy_k
