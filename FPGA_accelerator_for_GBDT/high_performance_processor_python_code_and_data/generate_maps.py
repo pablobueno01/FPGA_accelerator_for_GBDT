@@ -23,9 +23,8 @@ def _uncertainty_to_map(uncertainty, num_classes, slots=0, max_H=0):
         Number of groups to divide uncertainty map values. If set to 0,
         `slots` will be set to `max_H * 10`.
     max_H : float, optional (default: 0)
-        The max value of the range of uncertainty for the uncertainty
-        map. The `0` value will use the logarithm of `num_classes` as
-        it is the theoretical maximum value of the uncertainty.
+        Maximum uncertainty value. If set to 0, it will be calculated as
+        the maximum value in the `uncertainty` array.
     
     Returns
     -------
@@ -38,7 +37,7 @@ def _uncertainty_to_map(uncertainty, num_classes, slots=0, max_H=0):
     
     # Actualise `max_H` in case of the default value
     if max_H == 0:
-        max_H = math.log(num_classes)
+        max_H = np.ceil(np.max(uncertainty) * 10) / 10
     
     # Actualise `slots` in case of the default value
     if slots == 0:
@@ -120,24 +119,25 @@ MAP_COLOURS = [
     (0, 128, 128), (220, 190, 255), (170, 110, 40), (255, 250, 200),
     (128, 0, 0), (170, 255, 195), (0, 0, 128), (128, 128, 128)]
 
-MAP_GRADIENTS = [
-    (77, 230, 54), (135, 229, 53), (193, 229, 52), (229, 206, 51),
-    (228, 146, 50), (228, 86, 49), (228, 48, 71), (227, 47, 130),
-    (227, 46, 189), (204, 45, 227), (143, 44, 226), (81, 43, 226),
-    (42, 64, 226), (41, 125, 225), (40, 185, 225), (39, 225, 202)]
-# Gradient colours from green juice to palatinate blue (https://colornamer.robertcooper.me/)
 # MAP_GRADIENTS = [
-#     (77, 230, 54), (106, 229, 53), (135, 229, 53), (164, 229, 52),
-#     (193, 229, 52), (211, 217, 51), (229, 206, 51), (228, 176, 50),
-#     (228, 146, 50), (228, 115, 49), (228, 86, 49), (228, 67, 60),
-#     (228, 48, 71), (227, 47, 100), (227, 47, 130), (227, 46, 159),
-#     (227, 46, 189), (215, 45, 207), (204, 45, 227), (173, 44, 226),
-#     (143, 44, 226), (111, 43, 226), (81, 43, 226), (61, 53, 226),
-#     (42, 64, 226)
-# ]
+#     (77, 230, 54), (135, 229, 53), (193, 229, 52), (229, 206, 51),
+#     (228, 146, 50), (228, 86, 49), (228, 48, 71), (227, 47, 130),
+#     (227, 46, 189), (204, 45, 227), (143, 44, 226), (81, 43, 226),
+#     (42, 64, 226), (41, 125, 225), (40, 185, 225), (39, 225, 202)]
+
+# Gradient colours from green juice to ice climber (https://colornamer.robertcooper.me/)
+MAP_GRADIENTS = [
+    (77, 230, 54), (113, 229, 53), (149, 229, 52), (185, 229, 52), 
+    (211, 217, 51), (228, 198, 50), (228, 161, 50), (228, 123, 49), 
+    (228, 86, 49), (228, 62, 62), (227, 47, 85), (227, 47, 122), 
+    (227, 46, 159), (224, 45, 193), (209, 45, 217), (181, 44, 226), 
+    (143, 44, 226), (104, 43, 226), (71, 48, 226), (46, 61, 226), 
+    (41, 94, 225), (40, 132, 225), (40, 170, 225), (39, 200, 216), 
+    (39, 225, 202)
+]
 
 def plot_maps(output_dir, name, shape, num_classes, wl, img, y, pred_map,
-              H_map, colours=MAP_COLOURS, gradients=MAP_GRADIENTS, max_H=1.5, slots=15):
+              H_map, colours=MAP_COLOURS, gradients=MAP_GRADIENTS, max_H=0, slots=0):
     """Generates and saves the `uncertainty map` plot of a dataset
     
     This plot shows an RGB representation of the hyperspectral image,
@@ -177,10 +177,9 @@ def plot_maps(output_dir, name, shape, num_classes, wl, img, y, pred_map,
     slots : int, optional (default: 15)
         Number of groups to divide uncertainty map values. If set to 0,
         `slots` will be set to `max_H * 10`.
-    max_H : float, optional (default: 1.5)
-        The max value of the range of uncertainty for the uncertainty
-        map. The `0` value will use the logarithm of `num_classes` as
-        it is the theoretical maximum value of the uncertainty.
+    max_H : float, optional (default: 0)
+        Maximum uncertainty value. If set to 0, it will be calculated as
+        the maximum value in the `uncertainty` array.
     """
     
     # PREPARE FIGURE
@@ -245,7 +244,7 @@ def plot_maps(output_dir, name, shape, num_classes, wl, img, y, pred_map,
     
     # Generate and show coloured uncertainty map
     if max_H == 0:
-        max_H = math.log(num_classes)
+        max_H = np.ceil(np.max(u_map) * 10) / 10
     if slots == 0:
         slots = int(max_H * 10)
     H_img = _map_to_img(u_map, shape, gradients[:slots])
@@ -268,7 +267,12 @@ def plot_maps(output_dir, name, shape, num_classes, wl, img, y, pred_map,
 
 def main(th_acc=0.025, num_models=16):
 
-    maps_dir = "{}/{}/{}".format(MAPS_DIR, 'forest_{}'.format(th_acc), num_models)
+    if th_acc == 0:
+        subdir = 'manual'
+    else:
+        subdir = '{}'.format(th_acc)
+
+    maps_dir = "{}/{}/{}".format(MAPS_DIR, 'forest_'+subdir, num_models)
 
     # For each image
     for img in IMAGES:
@@ -287,12 +291,12 @@ def main(th_acc=0.025, num_models=16):
         X, y = pixel_classification_preprocessing(X, y, only_labelled=False)
 
         # Obtain the reduced data
-        top_k_ft_path = next((os.path.join(FEATURE_IMPORTANCES_DIR, '{}'.format(th_acc), file) for file in os.listdir(FEATURE_IMPORTANCES_DIR+'/{}'.format(th_acc)) if file.startswith(image_name + "_top_")), None)
+        top_k_ft_path = next((os.path.join(FEATURE_IMPORTANCES_DIR, subdir, file) for file in os.listdir(FEATURE_IMPORTANCES_DIR+'/'+subdir) if file.startswith(image_name + "_top_")), None)
         k = int(top_k_ft_path.split("_features.npy")[0].split("_top_")[-1]) # Number of features
         top_k_features = np.load(top_k_ft_path)
         X_k = X[:, top_k_features]
         # Load the trained forest model
-        trained_forest = joblib.load("{}/{}/{}_forest_{}_models.joblib".format(MODELS_DIR, '{}'.format(th_acc), image_name, num_models))
+        trained_forest = joblib.load("{}/{}/{}_forest_{}_models.joblib".format(MODELS_DIR, subdir, image_name, num_models))
 
         # Get the individual probabilities of the forest
         individual_probabilities = get_forest_individual_probabilities(trained_forest, X_k)
@@ -311,9 +315,6 @@ if __name__ == "__main__":
     if len(sys.argv) > 2:
         th_acc = float(sys.argv[1])
         num_models = int(sys.argv[2])
-        if th_acc <= 0:
-            print("th_acc must be greater than 0")
-            sys.exit(1)
     else:
         th_acc = 0.025
         num_models = 16

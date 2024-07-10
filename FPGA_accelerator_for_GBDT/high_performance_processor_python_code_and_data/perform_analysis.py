@@ -512,7 +512,12 @@ def get_forest_individual_probabilities(trained_forest, X_test):
 
 def main(th_acc=0.025, num_models=16):
 
-    graphics_dir = "{}/{}/{}".format(ACCURACY_GRAPHICS_DIR, 'forest_{}'.format(th_acc), num_models)
+    if th_acc == 0:
+        subdir = 'manual'
+    else:
+        subdir = '{}'.format(th_acc)
+
+    graphics_dir = "{}/{}/{}".format(ACCURACY_GRAPHICS_DIR, 'forest_'+subdir, num_models)
         
     # Dictionaries to store the data
     reliability_dict = {}
@@ -540,12 +545,12 @@ def main(th_acc=0.025, num_models=16):
         print("Test pixels: {}".format(X_test.shape[0]))
 
         # Obtain the reduced data
-        top_k_ft_path = next((os.path.join(FEATURE_IMPORTANCES_DIR, '{}'.format(th_acc), file) for file in os.listdir(FEATURE_IMPORTANCES_DIR+'/{}'.format(th_acc)) if file.startswith(image_name + "_top_")), None)
+        top_k_ft_path = next((os.path.join(FEATURE_IMPORTANCES_DIR, subdir, file) for file in os.listdir(FEATURE_IMPORTANCES_DIR+'/'+subdir) if file.startswith(image_name + "_top_")), None)
         k = int(top_k_ft_path.split("_features.npy")[0].split("_top_")[-1]) # Number of features
         top_k_features = np.load(top_k_ft_path)
         X_test_k = X_test[:, top_k_features]
         # Load the trained forest model
-        trained_forest = joblib.load("{}/{}/{}_forest_{}_models.joblib".format(MODELS_DIR, '{}'.format(th_acc),image_name, num_models))
+        trained_forest = joblib.load("{}/{}/{}_forest_{}_models.joblib".format(MODELS_DIR, subdir,image_name, num_models))
         print('\nForest with {} models and {} features'.format(num_models, k))
 
         # -------------MODEL ANALYSIS-------------
@@ -579,9 +584,6 @@ if __name__ == "__main__":
     if len(sys.argv) > 2:
         th_acc = float(sys.argv[1])
         num_models = int(sys.argv[2])
-        if th_acc <= 0:
-            print("th_acc must be greater than 0")
-            sys.exit(1)
     else:
         th_acc = 0.025
         num_models = 16
