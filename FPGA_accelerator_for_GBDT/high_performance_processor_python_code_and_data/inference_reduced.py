@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 from __future__ import division, absolute_import, print_function
 import os
+import sys
 import timeit
 import scipy.io
 import numpy as np
@@ -474,7 +475,7 @@ def save_feature_importance_heat_map(importance, save_path):
     plt.savefig(save_path)
     plt.close()
 
-def feature_selection(importance, X_train, y_train, accuracy, image_name, th_acc=0.025):
+def feature_selection(importance, X_train, y_train, accuracy, image_name, th_acc=0.01):
     """
     Perform feature selection based on feature importance scores.
 
@@ -528,7 +529,7 @@ def feature_selection(importance, X_train, y_train, accuracy, image_name, th_acc
 # MAIN FUNCTION
 # =============================================================================
 
-def main(load_model=True):
+def main(th_acc=0.01, load_model=True):
     
     # For each image
     for img in IMAGES:
@@ -566,7 +567,7 @@ def main(load_model=True):
         save_feature_importance_heat_map(importance, "{}/{}_importance.png".format(FEATURE_IMPORTANCES_DIR, image_name))
 
         # Perform feature selection
-        k, top_k_features, accuracy_k = feature_selection(importance, X_train, y_train, accuracy_cv, image_name)
+        k, top_k_features, accuracy_k = feature_selection(importance, X_train, y_train, accuracy_cv, image_name, th_acc)
 
         # Train reduced model
         new_model = LGBMClassifier(importance_type='gain', random_state=69)
@@ -580,8 +581,16 @@ def main(load_model=True):
         print("Prediction time: {:.3f}s ({}px/s)\n".format(time, speed))
 
         # Save the reduced model and the top k features
-        joblib.dump(new_model, "{}/{}_model_{}.joblib".format(MODELS_DIR, image_name, k))
-        np.save(os.path.join(FEATURE_IMPORTANCES_DIR, "{}_top_{}_features.npy".format(image_name, k)), top_k_features)
+        joblib.dump(new_model, "{}/{}/{}_model_{}.joblib".format(MODELS_DIR, '{}'.format(th_acc), image_name, k))
+        np.save(os.path.join(FEATURE_IMPORTANCES_DIR, '{}'.format(th_acc), "{}_top_{}_features.npy".format(image_name, k)), top_k_features)
         
 if __name__ == "__main__":
-    main()
+    if len(sys.argv) > 1:
+        th_acc = float(sys.argv[1])
+        if th_acc <= 0:
+            print("th_acc must be greater than 0")
+            sys.exit(1)
+    else:
+        th_acc = 0.01
+
+    main(th_acc=th_acc)

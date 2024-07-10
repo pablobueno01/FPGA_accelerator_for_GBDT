@@ -322,11 +322,4 @@ def main(model_type):
     print("\n--------------------------------")
 
 if __name__ == "__main__":
-    if len(sys.argv) > 1:
-        arg = sys.argv[1]
-        if arg == 'full' or arg == 'reduced' or arg == 'forest':
-            main(arg)
-        else:
-            print("Error: Invalid argument. Please use 'full', 'reduced', or 'forest'.")
-    else:
-        main('full')
+    main('forest')
