@@ -1,5 +1,6 @@
 #!/usr/bin/env python2
 # -*- coding: utf-8 -*-
+import sys
 from inference_reduced import *
 from scipy.stats import mode
 from sklearn.model_selection import ParameterSampler
@@ -79,7 +80,7 @@ def forest_predict(trained_forest, X_test, y_test, use_probabilities=True):
     
     return accuracy_forest, individual_accuracies
 
-def main():
+def main(th_acc=0.01):
     # For each image
     for img in IMAGES:
         
@@ -101,14 +102,14 @@ def main():
         print("Train pixels: {}\tTest pixels: {}".format(X_train.shape[0], X_test.shape[0]))
 
         # Obtain the reduced data
-        top_k_ft_path = next((os.path.join(FEATURE_IMPORTANCES_DIR, file) for file in os.listdir(FEATURE_IMPORTANCES_DIR) if file.startswith(image_name + "_top_")), None)
+        top_k_ft_path = next((os.path.join(FEATURE_IMPORTANCES_DIR, '{}'.format(th_acc), file) for file in os.listdir(FEATURE_IMPORTANCES_DIR+'/{}'.format(th_acc)) if file.startswith(image_name + "_top_")), None)
         k = int(top_k_ft_path.split("_features.npy")[0].split("_top_")[-1]) # Number of features
         top_k_features = np.load(top_k_ft_path)
         X_train_k = X_train[:, top_k_features]
         X_test_k = X_test[:, top_k_features]
 
         # Load the trained reduced model
-        model = joblib.load("{}/{}_model_{}.joblib".format(MODELS_DIR, image_name, k))
+        model = joblib.load("{}/{}/{}_model_{}.joblib".format(MODELS_DIR, '{}'.format(th_acc), image_name, k))
         print("\nReduced model with {} features:".format(k))
 
         # Perform inference with reduced model
@@ -121,15 +122,21 @@ def main():
             clf.fit(X_train_k, y_train)
 
         # Perform inference with forest
-        print("Performing inference with forest...")
-        accuracy_forest, individual_accuracies = forest_predict(FOREST, X_test_k, y_test)
-        # print("Individual Test Accuracies:")
-        # for accuracy in individual_accuracies:
-        #     print("{:.3f}".format(accuracy))
-        print("\nForest Test Accuracy: {:.3f}".format(accuracy_forest))
+        for i in [2, 4, 8, 16]:
+            print("\nPerforming inference with forest...")
+            accuracy_forest, individual_accuracies = forest_predict(FOREST[:i], X_test_k, y_test)
+            print("Forest Test Accuracy ({} models): {:.3f}".format(i, accuracy_forest))
 
-        # Save forest models
-        joblib.dump(FOREST, "{}/{}_forest_models.joblib".format(MODELS_DIR, image_name))
+            # Save forest models
+            joblib.dump(FOREST[:i], "{}/{}/{}_forest_{}_models.joblib".format(MODELS_DIR, '{}'.format(th_acc), image_name, i))
         
 if __name__ == "__main__":
-    main()
+    if len(sys.argv) > 1:
+        th_acc = float(sys.argv[1])
+        if th_acc <= 0:
+            print("th_acc must be greater than 0")
+            sys.exit(1)
+    else:
+        th_acc = 0.01
+
+    main(th_acc=th_acc)

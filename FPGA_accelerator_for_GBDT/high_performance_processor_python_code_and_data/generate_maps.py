@@ -266,9 +266,9 @@ def plot_maps(output_dir, name, shape, num_classes, wl, img, y, pred_map,
 # MAIN FUNCTION
 # =============================================================================
 
-def main(model_type):
+def main(th_acc=0.025, num_models=16):
 
-    maps_dir = "{}/{}".format(MAPS_DIR, model_type)
+    maps_dir = "{}/{}/{}".format(MAPS_DIR, 'forest_{}'.format(th_acc), num_models)
 
     # For each image
     for img in IMAGES:
@@ -286,27 +286,13 @@ def main(model_type):
         # Preprocess image
         X, y = pixel_classification_preprocessing(X, y, only_labelled=False)
 
-        if (model_type == 'full'):
-            trained_model = joblib.load("{}/{}_model.joblib".format(MODELS_DIR, image_name))
-            trained_forest = [trained_model]
-            X_k = X
-        elif (model_type == 'reduced'):
-            # Obtain the reduced data
-            top_k_ft_path = next((os.path.join(FEATURE_IMPORTANCES_DIR, file) for file in os.listdir(FEATURE_IMPORTANCES_DIR) if file.startswith(image_name + "_top_")), None)
-            k = int(top_k_ft_path.split("_features.npy")[0].split("_top_")[-1]) # Number of features
-            top_k_features = np.load(top_k_ft_path)
-            X_k = X[:, top_k_features]
-            # Load the trained reduced model
-            trained_model = joblib.load("{}/{}_model_{}.joblib".format(MODELS_DIR, image_name, k))
-            trained_forest = [trained_model]
-        else:
-            # Obtain the reduced data
-            top_k_ft_path = next((os.path.join(FEATURE_IMPORTANCES_DIR, file) for file in os.listdir(FEATURE_IMPORTANCES_DIR) if file.startswith(image_name + "_top_")), None)
-            k = int(top_k_ft_path.split("_features.npy")[0].split("_top_")[-1]) # Number of features
-            top_k_features = np.load(top_k_ft_path)
-            X_k = X[:, top_k_features]
-            # Load the trained forest model
-            trained_forest = joblib.load("{}/{}_forest_models.joblib".format(MODELS_DIR, image_name))
+        # Obtain the reduced data
+        top_k_ft_path = next((os.path.join(FEATURE_IMPORTANCES_DIR, '{}'.format(th_acc), file) for file in os.listdir(FEATURE_IMPORTANCES_DIR+'/{}'.format(th_acc)) if file.startswith(image_name + "_top_")), None)
+        k = int(top_k_ft_path.split("_features.npy")[0].split("_top_")[-1]) # Number of features
+        top_k_features = np.load(top_k_ft_path)
+        X_k = X[:, top_k_features]
+        # Load the trained forest model
+        trained_forest = joblib.load("{}/{}/{}_forest_{}_models.joblib".format(MODELS_DIR, '{}'.format(th_acc), image_name, num_models))
 
         # Get the individual probabilities of the forest
         individual_probabilities = get_forest_individual_probabilities(trained_forest, X_k)
@@ -322,4 +308,14 @@ def main(model_type):
     print("\n--------------------------------")
 
 if __name__ == "__main__":
-    main('forest')
+    if len(sys.argv) > 2:
+        th_acc = float(sys.argv[1])
+        num_models = int(sys.argv[2])
+        if th_acc <= 0:
+            print("th_acc must be greater than 0")
+            sys.exit(1)
+    else:
+        th_acc = 0.025
+        num_models = 16
+
+    main(th_acc=th_acc, num_models=num_models)

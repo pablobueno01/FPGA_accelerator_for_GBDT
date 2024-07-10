@@ -510,9 +510,9 @@ def get_forest_individual_probabilities(trained_forest, X_test):
 # MAIN FUNCTION
 # =============================================================================
 
-def main(model_type):
+def main(th_acc=0.025, num_models=16):
 
-    graphics_dir = "{}/{}".format(ACCURACY_GRAPHICS_DIR, model_type)
+    graphics_dir = "{}/{}/{}".format(ACCURACY_GRAPHICS_DIR, 'forest_{}'.format(th_acc), num_models)
         
     # Dictionaries to store the data
     reliability_dict = {}
@@ -539,30 +539,14 @@ def main(model_type):
         _, _, X_test, y_test = separate_pixels(X, y, train_size)
         print("Test pixels: {}".format(X_test.shape[0]))
 
-        if (model_type == 'full'):
-            trained_model = joblib.load("{}/{}_model.joblib".format(MODELS_DIR, image_name))
-            trained_forest = [trained_model]
-            X_test_k = X_test
-            print('\nFull model with {} features'.format(X_test.shape[1]))
-        elif (model_type == 'reduced'):
-            # Obtain the reduced data
-            top_k_ft_path = next((os.path.join(FEATURE_IMPORTANCES_DIR, file) for file in os.listdir(FEATURE_IMPORTANCES_DIR) if file.startswith(image_name + "_top_")), None)
-            k = int(top_k_ft_path.split("_features.npy")[0].split("_top_")[-1]) # Number of features
-            top_k_features = np.load(top_k_ft_path)
-            X_test_k = X_test[:, top_k_features]
-            # Load the trained reduced model
-            trained_model = joblib.load("{}/{}_model_{}.joblib".format(MODELS_DIR, image_name, k))
-            trained_forest = [trained_model]
-            print("\nReduced model with {} features:".format(k))
-        else:
-            # Obtain the reduced data
-            top_k_ft_path = next((os.path.join(FEATURE_IMPORTANCES_DIR, file) for file in os.listdir(FEATURE_IMPORTANCES_DIR) if file.startswith(image_name + "_top_")), None)
-            k = int(top_k_ft_path.split("_features.npy")[0].split("_top_")[-1]) # Number of features
-            top_k_features = np.load(top_k_ft_path)
-            X_test_k = X_test[:, top_k_features]
-            # Load the trained forest model
-            trained_forest = joblib.load("{}/{}_forest_models.joblib".format(MODELS_DIR, image_name))
-            print('\nForest with {} models and {} features'.format(FOREST_SIZE, k))
+        # Obtain the reduced data
+        top_k_ft_path = next((os.path.join(FEATURE_IMPORTANCES_DIR, '{}'.format(th_acc), file) for file in os.listdir(FEATURE_IMPORTANCES_DIR+'/{}'.format(th_acc)) if file.startswith(image_name + "_top_")), None)
+        k = int(top_k_ft_path.split("_features.npy")[0].split("_top_")[-1]) # Number of features
+        top_k_features = np.load(top_k_ft_path)
+        X_test_k = X_test[:, top_k_features]
+        # Load the trained forest model
+        trained_forest = joblib.load("{}/{}/{}_forest_{}_models.joblib".format(MODELS_DIR, '{}'.format(th_acc),image_name, num_models))
+        print('\nForest with {} models and {} features'.format(num_models, k))
 
         # -------------MODEL ANALYSIS-------------
         
@@ -570,7 +554,8 @@ def main(model_type):
         individual_probabilities = get_forest_individual_probabilities(trained_forest, X_test_k)
 
         # Generate class uncertainty plot
-        _, class_Ep_avg, class_H_Ep_avg = analyse_entropy(individual_probabilities, y_test)
+        class_H_avg, class_Ep_avg, class_H_Ep_avg = analyse_entropy(individual_probabilities, y_test)
+        print("Average Uncertainty: {:.2f}".format(class_H_avg[-1]))
         plot_class_uncertainty(graphics_dir, image_name, class_Ep_avg, class_H_Ep_avg)
 
         # Generate reliability diagram data
@@ -591,4 +576,14 @@ def main(model_type):
     plot_accuracy_vs_uncertainty(graphics_dir, acc_dict, px_dict)
 
 if __name__ == "__main__":
-    main('forest')
+    if len(sys.argv) > 2:
+        th_acc = float(sys.argv[1])
+        num_models = int(sys.argv[2])
+        if th_acc <= 0:
+            print("th_acc must be greater than 0")
+            sys.exit(1)
+    else:
+        th_acc = 0.025
+        num_models = 16
+
+    main(th_acc=th_acc, num_models=num_models)
