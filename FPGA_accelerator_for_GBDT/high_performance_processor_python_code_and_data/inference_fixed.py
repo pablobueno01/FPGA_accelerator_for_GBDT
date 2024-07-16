@@ -289,7 +289,7 @@ def fixed_predict(tree_structure, pixel, total_len=16, frac_len=13):
         value = int(value, 2)
         return value
 
-def fixed_accuracy(model, X_test, y_test):
+def fixed_accuracy(model, X_test, y_test, total_len=16, frac_len=13):
     hits = 0
     for pixel, label in zip(X_test, y_test):
         predictions = [0 for c in range(len(model))]
@@ -298,7 +298,7 @@ def fixed_accuracy(model, X_test, y_test):
                 for tree in group:
                     tree_structure= tree['tree_structure']
                     predictions[class_num] += fixed_predict(tree_structure,
-                                                            pixel)
+                                                            pixel, total_len, frac_len)
         if np.argmax(predictions) == label:
             hits += 1
     return hits / len(X_test)
@@ -423,15 +423,15 @@ def main(th_acc=0, num_models=16):
             #     - Calculate the cycles
             print("\nCalculating inference metrics...")
             (visited_nodes, avg_nodes,
-            used_cycles, avg_cycles) = get_cycles(final_model, X_test)
-            float_acc = float_accuracy(final_model, X_test, y_test)
-            fixed_acc = fixed_accuracy(final_model, X_test, y_test)
+            used_cycles, avg_cycles) = get_cycles(final_model, X_test_k)
+            float_acc = float_accuracy(final_model, X_test_k, y_test)
+            fixed_acc = fixed_accuracy(final_model, X_test_k, y_test, 11, 8)
             
             print("VISITED_NODES: {} ({} avg.)".format(visited_nodes, avg_nodes))
             print("USED_CYCLES: {} ({} avg.)".format(used_cycles, avg_cycles))
             print("FLOAT_ACC: {}".format(float_acc))
             print("FIXED_ACC: {}".format(fixed_acc))
-
+            break
             final_forest.append(final_model)
 
 if __name__ == "__main__":
