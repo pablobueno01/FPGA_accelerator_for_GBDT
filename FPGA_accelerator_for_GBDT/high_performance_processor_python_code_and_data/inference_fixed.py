@@ -277,6 +277,8 @@ def fixed_predict(tree_structure, pixel, total_len=16, frac_len=13):
         right_child = tree_structure['right_child']
         feature = tree_structure['split_feature']
         cmp_value = tree_structure['threshold']
+        cmp_value = to_fixed_str(cmp_value, 14, 0) # 13 + sign bit to avoid warnings
+        cmp_value = int(cmp_value, 2)
         
         if pixel[feature] <= cmp_value:
             return float_predict(left_child, pixel)
@@ -425,11 +427,11 @@ def main(th_acc=0, num_models=16):
             (visited_nodes, avg_nodes,
             used_cycles, avg_cycles) = get_cycles(final_model, X_test_k)
             float_acc = float_accuracy(final_model, X_test_k, y_test)
-            fixed_acc = fixed_accuracy(final_model, X_test_k, y_test, 11, 8)
+            fixed_acc = fixed_accuracy(final_model, X_test_k, y_test, 3, 0)
             
-            print("VISITED_NODES: {} ({} avg.)".format(visited_nodes, avg_nodes))
-            print("USED_CYCLES: {} ({} avg.)".format(used_cycles, avg_cycles))
-            print("FLOAT_ACC: {}".format(float_acc))
+            #print("VISITED_NODES: {} ({} avg.)".format(visited_nodes, avg_nodes))
+            #print("USED_CYCLES: {} ({} avg.)".format(used_cycles, avg_cycles))
+            #print("FLOAT_ACC: {}".format(float_acc))
             print("FIXED_ACC: {}".format(fixed_acc))
             break
             final_forest.append(final_model)
