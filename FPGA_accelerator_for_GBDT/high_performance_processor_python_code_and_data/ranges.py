@@ -3,6 +3,27 @@
 from inference_reduced import *
 from inference_fixed import *
 
+def tree_num_nodes(tree_structure):
+    if 'split_index' in tree_structure:
+        # It is a non-leaf node
+        left_child = tree_structure['left_child']
+        right_child = tree_structure['right_child']
+        return 1 + tree_num_nodes(left_child) + tree_num_nodes(right_child)
+    else:
+        # It is a leaf node
+        return 1
+    
+def max_rel_right_child(tree_structure):
+    if 'split_index' in tree_structure:
+        # It is a non-leaf node
+        left_child = tree_structure['left_child']
+        right_child = tree_structure['right_child']
+        left_num_nodes = tree_num_nodes(left_child) + 1
+        max_right = max_rel_right_child(right_child)
+        return max(left_num_nodes, max_right)
+    else:
+        # It is a leaf node
+        return 0
 
 def min_max_cmp_value(tree_structure):
     if 'split_index' in tree_structure:
@@ -108,20 +129,29 @@ def main():
                 
                 final_model.append(class_selected_trees)
 
-            min_threshold = float('inf')
-            max_threshold = float('-inf')
+            # min_threshold = float('inf')
+            # max_threshold = float('-inf')
+            # for class_num, class_trees in enumerate(final_model):
+            #     for group in class_trees:
+            #         for tree in group:
+            #             tree_structure = tree['tree_structure']
+            #             tree_min, tree_max = min_max_cmp_value(tree_structure)
+            #             if tree_min < min_threshold:
+            #                 min_threshold = tree_min
+            #             if tree_max > max_threshold:
+            #                 max_threshold = tree_max
+
+            # print("Minimum value of cmp_value: {}".format(min_threshold))
+            # print("Maximum value of cmp_value: {}".format(max_threshold))
+            max_rel_right = 0
             for class_num, class_trees in enumerate(final_model):
                 for group in class_trees:
                     for tree in group:
                         tree_structure = tree['tree_structure']
-                        tree_min, tree_max = min_max_cmp_value(tree_structure)
-                        if tree_min < min_threshold:
-                            min_threshold = tree_min
-                        if tree_max > max_threshold:
-                            max_threshold = tree_max
+                        m = max_rel_right_child(tree_structure)
+                        if m > max_rel_right:
+                            max_rel_right = m
 
-            print("Minimum value of cmp_value: {}".format(min_threshold))
-            print("Maximum value of cmp_value: {}".format(max_threshold))
-
+            print("Maximum value of rel_right_child: {}".format(max_rel_right))
 if __name__ == "__main__":
     main()
