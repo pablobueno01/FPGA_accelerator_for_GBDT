@@ -277,19 +277,22 @@ def fixed_predict(tree_structure, pixel, total_len=16, frac_len=13):
         right_child = tree_structure['right_child']
         feature = tree_structure['split_feature']
         cmp_value = tree_structure['threshold']
-        cmp_value = to_fixed_str(cmp_value, 14, 0) # 13 + sign bit to avoid warnings
-        cmp_value = int(cmp_value, 2)
+        # cmp_value = to_fixed_str(cmp_value, 14, 0) # 13 + sign bit to avoid warnings
+        # cmp_value = int(cmp_value, 2)
         
         if pixel[feature] <= cmp_value:
-            return float_predict(left_child, pixel)
+            return fixed_predict(left_child, pixel, total_len, frac_len)
         else:
-            return float_predict(right_child, pixel)
+            return fixed_predict(right_child, pixel, total_len, frac_len)
     else:
         # It is a leaf node
         value = tree_structure['leaf_value']
-        value = to_fixed_str(value, total_len, frac_len)
-        value = int(value, 2)
-        return value
+        bits_value = to_fixed_str(value, total_len, frac_len)
+        fixed_value = int(bits_value, 2)
+        if bits_value[0] == '1':
+            fixed_value -= (1 << total_len)
+        fixed_value = fixed_value / 2**frac_len
+        return fixed_value
 
 def fixed_accuracy(model, X_test, y_test, total_len=16, frac_len=13):
     hits = 0
@@ -424,10 +427,10 @@ def main(th_acc=0, num_models=16):
             #     - Compare floating and fixed point representations
             #     - Calculate the cycles
             print("\nCalculating inference metrics...")
-            (visited_nodes, avg_nodes,
-            used_cycles, avg_cycles) = get_cycles(final_model, X_test_k)
-            float_acc = float_accuracy(final_model, X_test_k, y_test)
-            fixed_acc = fixed_accuracy(final_model, X_test_k, y_test, 3, 0)
+            # (visited_nodes, avg_nodes,
+            # used_cycles, avg_cycles) = get_cycles(final_model, X_test_k)
+            # float_acc = float_accuracy(final_model, X_test_k, y_test)
+            fixed_acc = fixed_accuracy(final_model, X_test_k, y_test, 16, 13)
             
             #print("VISITED_NODES: {} ({} avg.)".format(visited_nodes, avg_nodes))
             #print("USED_CYCLES: {} ({} avg.)".format(used_cycles, avg_cycles))
