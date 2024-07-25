@@ -10,9 +10,9 @@ FOREST_SIZE = 16
 
 # Define the parameter ranges
 param_ranges = {
-    'max_depth': range(5, 12),
-    'n_estimators': range(50, 300),
-    'min_child_samples': range(10, 30),
+    'max_depth': range(5, 8),
+    'n_estimators': range(50, 301),
+    'min_child_samples': range(10, 31),
     'subsample': [0.6, 0.7, 0.8, 0.9],
     'subsample_freq': [1, 2, 3],
     'learning_rate': [0.05, 0.1, 0.2],

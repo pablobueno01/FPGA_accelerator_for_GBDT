@@ -69,30 +69,30 @@ def main():
         
         print("\n----------------{}----------------".format(image_name))
         
-        # Load image
-        X, y = load_image(image_info)
+        # # Load image
+        # X, y = load_image(image_info)
         
-        # Preprocess image
-        X, y = pixel_classification_preprocessing(X, y)
+        # # Preprocess image
+        # X, y = pixel_classification_preprocessing(X, y)
         
-        # Find the minimum and maximum values of X
-        min_val = min(X.flatten())
-        max_val = max(X.flatten())
+        # # Find the minimum and maximum values of X
+        # min_val = min(X.flatten())
+        # max_val = max(X.flatten())
         
-        print("Minimum value of X: {}".format(min_val))
-        print("Maximum value of X: {}".format(max_val))
+        # print("Minimum value of X: {}".format(min_val))
+        # print("Maximum value of X: {}".format(max_val))
 
-        # Obtain the reduced data
-        top_k_ft_path = next((os.path.join(FEATURE_IMPORTANCES_DIR, subdir, file) for file in os.listdir(FEATURE_IMPORTANCES_DIR+'/'+subdir) if file.startswith(image_name + "_top_")), None)
-        top_k_features = np.load(top_k_ft_path)
-        X_k = X[:, top_k_features]
+        # # Obtain the reduced data
+        # top_k_ft_path = next((os.path.join(FEATURE_IMPORTANCES_DIR, subdir, file) for file in os.listdir(FEATURE_IMPORTANCES_DIR+'/'+subdir) if file.startswith(image_name + "_top_")), None)
+        # top_k_features = np.load(top_k_ft_path)
+        # X_k = X[:, top_k_features]
 
-        # Find the minimum and maximum values of X
-        min_val = min(X_k.flatten())
-        max_val = max(X_k.flatten())
+        # # Find the minimum and maximum values of X
+        # min_val = min(X_k.flatten())
+        # max_val = max(X_k.flatten())
         
-        print("Minimum value of X_k: {}".format(min_val))
-        print("Maximum value of X_k: {}".format(max_val))
+        # print("Minimum value of X_k: {}".format(min_val))
+        # print("Maximum value of X_k: {}".format(max_val))
 
         # Load the trained forest model
         trained_forest = joblib.load("{}/{}/{}_forest_{}_models.joblib".format(MODELS_DIR, subdir,image_name, 16))
@@ -129,29 +129,24 @@ def main():
                 
                 final_model.append(class_selected_trees)
 
-            # min_threshold = float('inf')
-            # max_threshold = float('-inf')
-            # for class_num, class_trees in enumerate(final_model):
-            #     for group in class_trees:
-            #         for tree in group:
-            #             tree_structure = tree['tree_structure']
-            #             tree_min, tree_max = min_max_cmp_value(tree_structure)
-            #             if tree_min < min_threshold:
-            #                 min_threshold = tree_min
-            #             if tree_max > max_threshold:
-            #                 max_threshold = tree_max
-
-            # print("Minimum value of cmp_value: {}".format(min_threshold))
-            # print("Maximum value of cmp_value: {}".format(max_threshold))
+            min_threshold = float('inf')
+            max_threshold = float('-inf')
             max_rel_right = 0
             for class_num, class_trees in enumerate(final_model):
                 for group in class_trees:
                     for tree in group:
                         tree_structure = tree['tree_structure']
+                        tree_min, tree_max = min_max_cmp_value(tree_structure)
+                        if tree_min < min_threshold:
+                            min_threshold = tree_min
+                        if tree_max > max_threshold:
+                            max_threshold = tree_max
                         m = max_rel_right_child(tree_structure)
                         if m > max_rel_right:
                             max_rel_right = m
 
+            print("Minimum value of cmp_value: {}".format(min_threshold))
+            print("Maximum value of cmp_value: {}".format(max_threshold))
             print("Maximum value of rel_right_child: {}".format(max_rel_right))
 if __name__ == "__main__":
     main()
