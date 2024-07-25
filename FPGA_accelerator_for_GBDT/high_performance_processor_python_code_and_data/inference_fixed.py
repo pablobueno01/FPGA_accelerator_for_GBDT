@@ -270,7 +270,7 @@ def float_accuracy(model, X_test, y_test):
             hits += 1
     return hits / len(X_test)
 
-def fixed_predict(tree_structure, pixel, total_len=16, frac_len=13):
+def fixed_predict(tree_structure, pixel, total_len, frac_len):
     if 'split_index' in tree_structure:
         # It is a non-leaf node
         left_child = tree_structure['left_child']
@@ -294,7 +294,7 @@ def fixed_predict(tree_structure, pixel, total_len=16, frac_len=13):
         fixed_value = fixed_value / 2**frac_len
         return fixed_value
 
-def fixed_accuracy(model, X_test, y_test, total_len=16, frac_len=13):
+def fixed_accuracy(model, X_test, y_test, total_len=16, frac_len=12):
     hits = 0
     for pixel, label in zip(X_test, y_test):
         predictions = [0 for c in range(len(model))]
@@ -430,7 +430,7 @@ def main(th_acc=0, num_models=16):
             # (visited_nodes, avg_nodes,
             # used_cycles, avg_cycles) = get_cycles(final_model, X_test_k)
             # float_acc = float_accuracy(final_model, X_test_k, y_test)
-            fixed_acc = fixed_accuracy(final_model, X_test_k, y_test, 16, 13)
+            fixed_acc = fixed_accuracy(final_model, X_test_k, y_test, 7, 3)
             
             #print("VISITED_NODES: {} ({} avg.)".format(visited_nodes, avg_nodes))
             #print("USED_CYCLES: {} ({} avg.)".format(used_cycles, avg_cycles))
