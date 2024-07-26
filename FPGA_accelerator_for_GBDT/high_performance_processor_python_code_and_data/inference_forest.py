@@ -26,7 +26,7 @@ param_combinations = list(ParameterSampler(param_ranges, n_iter=FOREST_SIZE, ran
 # Set the number of leaves based on the max_depth
 for params in param_combinations:
     params['num_leaves'] = 2 ** (params['max_depth'])
-    
+
 # Create the list of LGBMClassifier models with random parameters
 FOREST = [LGBMClassifier(random_state=69 + i, **params) for i, params in enumerate(param_combinations)]
 

@@ -51,6 +51,18 @@ def min_max_cmp_value(tree_structure):
     
     else:
         return float('inf'), float('-inf')
+    
+def min_max_leaf_value(tree_structure):
+    if 'split_index' in tree_structure:
+        # It is a non-leaf node
+        left_child = tree_structure['left_child']
+        right_child = tree_structure['right_child']
+        left_min, left_max = min_max_leaf_value(left_child)
+        right_min, right_max = min_max_leaf_value(right_child)
+        return min(left_min, right_min), max(left_max, right_max)
+    else:
+        # It is a leaf node
+        return tree_structure['leaf_value'], tree_structure['leaf_value']
 
 def main():
 
@@ -129,24 +141,33 @@ def main():
                 
                 final_model.append(class_selected_trees)
 
-            min_threshold = float('inf')
-            max_threshold = float('-inf')
+            min_cmp_value = float('inf')
+            max_cmp_value = float('-inf')
+            min_leaf = float('inf')
+            max_leaf = float('-inf')
             max_rel_right = 0
             for class_num, class_trees in enumerate(final_model):
                 for group in class_trees:
                     for tree in group:
                         tree_structure = tree['tree_structure']
-                        tree_min, tree_max = min_max_cmp_value(tree_structure)
-                        if tree_min < min_threshold:
-                            min_threshold = tree_min
-                        if tree_max > max_threshold:
-                            max_threshold = tree_max
-                        m = max_rel_right_child(tree_structure)
-                        if m > max_rel_right:
-                            max_rel_right = m
+                        # tree_min_cmp_value, tree_max_cmp_value = min_max_cmp_value(tree_structure)
+                        # if tree_min_cmp_value < min_cmp_value:
+                        #     min_cmp_value = tree_min_cmp_value
+                        # if tree_max_cmp_value > max_cmp_value:
+                        #     max_cmp_value = tree_max_cmp_value
+                        # m = max_rel_right_child(tree_structure)
+                        # if m > max_rel_right:
+                        #     max_rel_right = m
+                        tree_min_leaf, tree_max_leaf = min_max_leaf_value(tree_structure)
+                        if tree_min_leaf < min_leaf:
+                            min_leaf = tree_min_leaf
+                        if tree_max_leaf > max_leaf:
+                            max_leaf = tree_max_leaf
 
-            print("Minimum value of cmp_value: {}".format(min_threshold))
-            print("Maximum value of cmp_value: {}".format(max_threshold))
-            print("Maximum value of rel_right_child: {}".format(max_rel_right))
+            # print("Minimum value of cmp_value: {}".format(min_cmp_value))
+            # print("Maximum value of cmp_value: {}".format(max_cmp_value))
+            # print("Maximum value of rel_right_child: {}".format(max_rel_right))
+            print("Minimum value of leaf_value: {}".format(min_leaf))
+            print("Maximum value of leaf_value: {}".format(max_leaf))
 if __name__ == "__main__":
     main()
