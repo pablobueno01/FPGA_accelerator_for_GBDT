@@ -287,14 +287,14 @@ def fixed_predict(tree_structure, pixel, total_len, frac_len):
     else:
         # It is a leaf node
         value = tree_structure['leaf_value']
-        bits_value = to_fixed_str(value, total_len, frac_len)
+        bits_value = to_fixed_str(value, total_len, frac_len, verbose=False)
         fixed_value = int(bits_value, 2)
         if bits_value[0] == '1':
             fixed_value -= (1 << total_len)
         fixed_value = fixed_value / 2**frac_len
         return fixed_value
 
-def fixed_accuracy(model, X_test, y_test, total_len=7, frac_len=3):
+def fixed_accuracy(model, X_test, y_test, total_len=16, frac_len=12):
     hits = 0
     for pixel, label in zip(X_test, y_test):
         predictions = [0 for c in range(len(model))]
@@ -307,16 +307,6 @@ def fixed_accuracy(model, X_test, y_test, total_len=7, frac_len=3):
         if np.argmax(predictions) == label:
             hits += 1
     return hits / len(X_test)
-
-def cross_val_float_accuracy(model, X_train, y_train, cv=3):
-    scores = cross_val_score(model, X_train, y_train, cv=cv, scoring='float_accuracy')
-    float_acc = np.mean(scores)
-    return float_acc
-
-def cross_val_fixed_accuracy(model, X_train, y_train, cv=3):
-    scores = cross_val_score(model, X_train, y_train, cv=cv, scoring='fixed_accuracy')
-    fixed_acc = np.mean(scores)
-    return fixed_acc
 
 # ORDERED FOREST FUNCTIONS
 # =============================================================================
@@ -382,14 +372,15 @@ def main(th_acc=0, num_models=16):
         X, y = pixel_classification_preprocessing(X, y)
         
         # Separate data into train and test sets
-        _, _, X_test, y_test = separate_pixels(X, y, train_size)
-        print("Test pixels: {}".format(X_test.shape[0]))
+        X_train, y_train, X_test, y_test = separate_pixels(X, y, train_size)
+        print("Train pixels: {}\tTest pixels: {}".format(X_train.shape[0], X_test.shape[0]))
 
         # Obtain the reduced data
         top_k_ft_path = next((os.path.join(FEATURE_IMPORTANCES_DIR, subdir, file) for file in os.listdir(FEATURE_IMPORTANCES_DIR+'/'+subdir) if file.startswith(image_name + "_top_")), None)
         k = int(top_k_ft_path.split("_features.npy")[0].split("_top_")[-1]) # Number of features
         top_k_features = np.load(top_k_ft_path)
         X_test_k = X_test[:, top_k_features]
+        X_train_k = X_train[:, top_k_features]
 
         # Load the trained forest model
         trained_forest = joblib.load("{}/{}/{}_forest_{}_models.joblib".format(MODELS_DIR, subdir,image_name, num_models))
@@ -439,15 +430,18 @@ def main(th_acc=0, num_models=16):
             print("\nCalculating inference metrics...")
             # (visited_nodes, avg_nodes,
             # used_cycles, avg_cycles) = get_cycles(final_model, X_test_k)
-            float_acc = float_accuracy(final_model, X_test_k, y_test)
-            fixed_acc = fixed_accuracy(final_model, X_test_k, y_test, 7, 3)
-            
-            #print("VISITED_NODES: {} ({} avg.)".format(visited_nodes, avg_nodes))
-            #print("USED_CYCLES: {} ({} avg.)".format(used_cycles, avg_cycles))
-            print("FLOAT_ACC: {}".format(float_acc))
+            # float_acc = float_accuracy(final_model, X_test_k, y_test)
+            # fixed_acc = fixed_accuracy(final_model, X_test_k, y_test, 7, 3)
+            # float_acc = float_accuracy(final_model, X_test_k, y_test)
+            # print("FLOAT_ACC: {}".format(float_acc))
+            fixed_acc = fixed_accuracy(final_model, X_test_k, y_test, 6, 2)
             print("FIXED_ACC: {}".format(fixed_acc))
             break
-            final_forest.append(final_model)
+            #print("VISITED_NODES: {} ({} avg.)".format(visited_nodes, avg_nodes))
+            #print("USED_CYCLES: {} ({} avg.)".format(used_cycles, avg_cycles))
+            
+            
+            
 
 if __name__ == "__main__":
     main(th_acc=0, num_models=16)

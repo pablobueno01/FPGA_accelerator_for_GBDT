@@ -28,7 +28,7 @@ for params in param_combinations:
     params['num_leaves'] = 2 ** (params['max_depth'])
 
 # Create the list of LGBMClassifier models with random parameters
-FOREST = [LGBMClassifier(random_state=69 + i, **params) for i, params in enumerate(param_combinations)]
+FOREST = [LGBMClassifier(random_state=69 + i, verbose=-1, **params) for i, params in enumerate(param_combinations)]
 
 def forest_predict(trained_forest, X_test, y_test, use_probabilities=True):
     """
