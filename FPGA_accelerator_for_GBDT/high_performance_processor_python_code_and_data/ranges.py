@@ -52,6 +52,24 @@ def min_max_cmp_value(tree_structure):
     else:
         return float('inf'), float('-inf')
     
+def cmp_value_hist(tree_structure, hist):
+    if 'split_index' in tree_structure:
+        # It is a non-leaf node
+        left_child = tree_structure['left_child']
+        right_child = tree_structure['right_child']
+        cmp_value = tree_structure['threshold']
+        cmp_value = int(cmp_value)
+
+        if cmp_value not in hist:
+            hist[cmp_value] = 1
+        else:
+            hist[cmp_value] += 1
+
+        cmp_value_hist(left_child, hist)
+        cmp_value_hist(right_child, hist)
+    
+    return hist
+
 def min_max_leaf_value(tree_structure):
     if 'split_index' in tree_structure:
         # It is a non-leaf node
@@ -111,6 +129,7 @@ def main():
         # Get ordered forest
         ordered_forest = get_ordered_forest(trained_forest, num_classes)
 
+        hist = {}
         for model_index, ordered_model in enumerate(ordered_forest):
             print("\nModel {}".format(model_index))
             # For each class
@@ -146,6 +165,7 @@ def main():
             min_leaf = float('inf')
             max_leaf = float('-inf')
             max_rel_right = 0
+            
             for class_num, class_trees in enumerate(final_model):
                 for group in class_trees:
                     for tree in group:
@@ -158,16 +178,26 @@ def main():
                         # m = max_rel_right_child(tree_structure)
                         # if m > max_rel_right:
                         #     max_rel_right = m
-                        tree_min_leaf, tree_max_leaf = min_max_leaf_value(tree_structure)
-                        if tree_min_leaf < min_leaf:
-                            min_leaf = tree_min_leaf
-                        if tree_max_leaf > max_leaf:
-                            max_leaf = tree_max_leaf
+                        # tree_min_leaf, tree_max_leaf = min_max_leaf_value(tree_structure)
+                        # if tree_min_leaf < min_leaf:
+                        #     min_leaf = tree_min_leaf
+                        # if tree_max_leaf > max_leaf:
+                        #     max_leaf = tree_max_leaf
+                        cmp_value_hist(tree_structure, hist)
 
             # print("Minimum value of cmp_value: {}".format(min_cmp_value))
             # print("Maximum value of cmp_value: {}".format(max_cmp_value))
             # print("Maximum value of rel_right_child: {}".format(max_rel_right))
-            print("Minimum value of leaf_value: {}".format(min_leaf))
-            print("Maximum value of leaf_value: {}".format(max_leaf))
+            # print("Minimum value of leaf_value: {}".format(min_leaf))
+            # print("Maximum value of leaf_value: {}".format(max_leaf))
+        print("Length of hist: {}".format(len(hist)))
+        min_key = min(hist, key=hist.get)
+        max_key = max(hist, key=hist.get)
+        min_value = hist[min_key]
+        max_value = hist[max_key]
+        print("Key with the minimum value: {} (Value: {})".format(min_key, min_value))
+        print("Key with the maximum value: {} (Value: {})".format(max_key, max_value))
+        
+
 if __name__ == "__main__":
     main()

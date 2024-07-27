@@ -277,8 +277,7 @@ def fixed_predict(tree_structure, pixel, total_len, frac_len):
         right_child = tree_structure['right_child']
         feature = tree_structure['split_feature']
         cmp_value = tree_structure['threshold']
-        # cmp_value = to_fixed_str(cmp_value, 14, 0) # 13 + sign bit to avoid warnings
-        # cmp_value = int(cmp_value, 2)
+        cmp_value = int(cmp_value)
         
         if pixel[feature] <= cmp_value:
             return fixed_predict(left_child, pixel, total_len, frac_len)
