@@ -433,7 +433,7 @@ def main(th_acc=0, num_models=16):
             # fixed_acc = fixed_accuracy(final_model, X_test_k, y_test, 7, 3)
             # float_acc = float_accuracy(final_model, X_test_k, y_test)
             # print("FLOAT_ACC: {}".format(float_acc))
-            fixed_acc = fixed_accuracy(final_model, X_test_k, y_test, 6, 2)
+            fixed_acc = fixed_accuracy(final_model, X_test_k, y_test, 7, 3)
             print("FIXED_ACC: {}".format(fixed_acc))
             break
             #print("VISITED_NODES: {} ({} avg.)".format(visited_nodes, avg_nodes))

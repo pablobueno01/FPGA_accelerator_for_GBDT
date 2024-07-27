@@ -58,7 +58,8 @@ def cmp_value_hist(tree_structure, hist):
         left_child = tree_structure['left_child']
         right_child = tree_structure['right_child']
         cmp_value = tree_structure['threshold']
-        cmp_value = int(cmp_value)
+        cmp_value = int(cmp_value)  # Remove the decimal part
+        cmp_value = cmp_value / 10
 
         if cmp_value not in hist:
             hist[cmp_value] = 1
