@@ -3,6 +3,8 @@
 from __future__ import division, absolute_import, print_function
 from inference_reduced import *
 
+K_MEANS_DIR = "k_means"
+
 # TREE FUNCTIONS
 # =============================================================================
 def tree_num_nodes(tree_structure):
@@ -270,19 +272,21 @@ def float_accuracy(model, X_test, y_test):
             hits += 1
     return hits / len(X_test)
 
-def fixed_predict(tree_structure, pixel, total_len, frac_len):
+def fixed_predict(tree_structure, pixel, total_len, frac_len, centroids_dict=None):
     if 'split_index' in tree_structure:
         # It is a non-leaf node
         left_child = tree_structure['left_child']
         right_child = tree_structure['right_child']
         feature = tree_structure['split_feature']
         cmp_value = tree_structure['threshold']
-        cmp_value = int(cmp_value)
+        #cmp_value = int(cmp_value)
+        if centroids_dict is not None:
+            cmp_value = centroids_dict[cmp_value]
         
         if pixel[feature] <= cmp_value:
-            return fixed_predict(left_child, pixel, total_len, frac_len)
+            return fixed_predict(left_child, pixel, total_len, frac_len, centroids_dict)
         else:
-            return fixed_predict(right_child, pixel, total_len, frac_len)
+            return fixed_predict(right_child, pixel, total_len, frac_len, centroids_dict)
     else:
         # It is a leaf node
         value = tree_structure['leaf_value']
@@ -293,7 +297,7 @@ def fixed_predict(tree_structure, pixel, total_len, frac_len):
         fixed_value = fixed_value / 2**frac_len
         return fixed_value
 
-def fixed_accuracy(model, X_test, y_test, total_len=16, frac_len=12):
+def fixed_accuracy(model, X_test, y_test, total_len=16, frac_len=12, centroids_dict=None):
     hits = 0
     for pixel, label in zip(X_test, y_test):
         predictions = [0 for c in range(len(model))]
@@ -302,7 +306,7 @@ def fixed_accuracy(model, X_test, y_test, total_len=16, frac_len=12):
                 for tree in group:
                     tree_structure= tree['tree_structure']
                     predictions[class_num] += fixed_predict(tree_structure,
-                                                            pixel, total_len, frac_len)
+                                                            pixel, total_len, frac_len, centroids_dict)
         if np.argmax(predictions) == label:
             hits += 1
     return hits / len(X_test)
@@ -363,7 +367,6 @@ def main(th_acc=0, num_models=16):
         num_classes = image_info["num_classes"]
         
         print("\n----------------{}----------------".format(image_name))
-
         # Load image
         X, y = load_image(image_info)
 
@@ -433,7 +436,10 @@ def main(th_acc=0, num_models=16):
             # fixed_acc = fixed_accuracy(final_model, X_test_k, y_test, 7, 3)
             # float_acc = float_accuracy(final_model, X_test_k, y_test)
             # print("FLOAT_ACC: {}".format(float_acc))
-            fixed_acc = fixed_accuracy(final_model, X_test_k, y_test, 7, 3)
+            # Load the centroids dictionary
+            centroids_dict = np.load(K_MEANS_DIR + '/' + image_name + '_centroids.npy', allow_pickle=True)
+            centroids_dict = dict(centroids_dict)
+            fixed_acc = fixed_accuracy(final_model, X_test_k, y_test, 7, 3, centroids_dict)
             print("FIXED_ACC: {}".format(fixed_acc))
             break
             #print("VISITED_NODES: {} ({} avg.)".format(visited_nodes, avg_nodes))

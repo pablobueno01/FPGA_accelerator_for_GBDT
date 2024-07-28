@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 from inference_reduced import *
 from inference_fixed import *
+from sklearn.cluster import KMeans
 
 def tree_num_nodes(tree_structure):
     if 'split_index' in tree_structure:
@@ -58,8 +59,7 @@ def cmp_value_hist(tree_structure, hist):
         left_child = tree_structure['left_child']
         right_child = tree_structure['right_child']
         cmp_value = tree_structure['threshold']
-        cmp_value = int(cmp_value)  # Remove the decimal part
-        cmp_value = cmp_value / 10
+        #cmp_value = int(cmp_value)
 
         if cmp_value not in hist:
             hist[cmp_value] = 1
@@ -191,14 +191,27 @@ def main():
             # print("Maximum value of rel_right_child: {}".format(max_rel_right))
             # print("Minimum value of leaf_value: {}".format(min_leaf))
             # print("Maximum value of leaf_value: {}".format(max_leaf))
-        print("Length of hist: {}".format(len(hist)))
-        min_key = min(hist, key=hist.get)
-        max_key = max(hist, key=hist.get)
-        min_value = hist[min_key]
-        max_value = hist[max_key]
-        print("Key with the minimum value: {} (Value: {})".format(min_key, min_value))
-        print("Key with the maximum value: {} (Value: {})".format(max_key, max_value))
+        #print("Unique values of cmp_value: {}".format(len(np.unique(hist))))
+
+        # Perform K-means clustering
+        samples = []
+        for key, count in hist.items():
+            samples.extend([key] * count)
+        samples = np.array(samples).reshape(-1, 1)
+        kmeans = KMeans(n_clusters=256)
+        kmeans.fit(samples)
+
+        # Get a new histogram with the centroids
+        centroids = kmeans.cluster_centers_.flatten()
+        new_hist = {}
+        for key in hist.keys():
+            cluster_label = kmeans.predict([[key]])[0]
+            new_hist[key] = centroids[cluster_label]
         
+        # Save the histogram with the centroids
+        centroids_dict = list(new_hist.items())
+        centroids_dict = np.array(centroids_dict, dtype=object)
+        np.save("{}/{}_centroids.npy".format(K_MEANS_DIR, image_name), centroids_dict)
 
 if __name__ == "__main__":
     main()
