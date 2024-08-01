@@ -311,6 +311,47 @@ def fixed_accuracy(model, X_test, y_test, total_len=16, frac_len=12, centroids_d
             hits += 1
     return hits / len(X_test)
 
+def cross_val_float_fixed_accuracy(model, X_train, y_train, num_classes, total_len=16, frac_len=12, centroids_dict=None, cv=3):
+    float_scores = []
+    fixed_scores = []
+    fold_size = len(X_train) // cv
+    
+    for i in range(cv):
+        print("\nFold {} of {}\n".format(i+1, cv))
+        # Split the data into train and validation sets
+        start = i * fold_size
+        end = (i + 1) * fold_size
+        X_val = X_train[start:end]
+        y_val = y_train[start:end]
+        X_train_fold = np.concatenate((X_train[:start], X_train[end:]))
+        y_train_fold = np.concatenate((y_train[:start], y_train[end:]))
+        
+        # Train the model on the training fold
+        print("Training...")
+        model.fit(X_train_fold, y_train_fold)
+
+        # Get model trees
+        print("Getting ordered model...")
+        ordered_model = model.booster_.dump_model()['tree_info']
+        # Reorder model
+        trained_class_trees = len(ordered_model) // num_classes
+        ordered_model = [[ordered_model[tree_num * num_classes + class_num]
+                            for tree_num in range(trained_class_trees)]
+                        for class_num in range(num_classes)]
+        # Get final model
+        final_model = get_final_model(ordered_model)
+
+        # Evaluate the model on the validation fold
+        print("Evaluating float...")
+        float_score = float_accuracy(final_model, X_val, y_val)
+        float_scores.append(float_score)
+        print("Evaluating fixed...")
+        fixed_score = fixed_accuracy(final_model, X_val, y_val, total_len, frac_len, centroids_dict)
+        fixed_scores.append(fixed_score)
+    
+    # Calculate the mean score
+    return np.mean(float_scores), np.mean(fixed_scores)
+
 # ORDERED FOREST FUNCTIONS
 # =============================================================================
 def get_ordered_forest(trained_forest, num_classes):
@@ -344,6 +385,36 @@ def get_ordered_forest(trained_forest, num_classes):
     
     return ordered_forest
 
+# ARCHITECTURE FUNCTIONS    
+# =============================================================================
+def get_final_model(ordered_model, class_nodes = 2**13):
+    final_model = []
+    for class_num, class_trees in enumerate(ordered_model):
+        total_nodes = 0
+        num_trees = 0
+        for num_tree, tree in enumerate(class_trees):
+            tree_nodes = tree_num_nodes(tree['tree_structure'])
+            if total_nodes + tree_nodes > class_nodes:
+                num_trees = num_tree
+                break
+            else:
+                num_trees += 1
+                total_nodes += tree_nodes
+        
+        # Sort the selected trees by average depth
+        selection = [(tree_average_depth(tree), tree)
+                    for tree in class_trees[0:num_trees]]
+        selection.sort()
+        
+        # Distribute them into the three groups
+        class_selected_trees = [[], [], []]
+        for i, (_, tree) in enumerate(selection):
+            class_selected_trees[i % 3].append(tree)
+        
+        final_model.append(class_selected_trees)
+
+    return final_model
+
 # MAIN FUNCTION
 # =============================================================================
 
@@ -353,9 +424,6 @@ def main(th_acc=0, num_models=16):
         subdir = 'manual'
     else:
         subdir = '{}'.format(th_acc)
-
-    # Architecture parameters
-    class_nodes = 2**13
 
     # For each image
     for img in IMAGES:
@@ -389,11 +457,11 @@ def main(th_acc=0, num_models=16):
         print('\nForest with {} models and {} features'.format(num_models, k))
 
         # Get ordered forest
-        ordered_forest = get_ordered_forest(trained_forest, num_classes)
+        # ordered_forest = get_ordered_forest(trained_forest, num_classes)
         
-        final_forest = []
-        for model_index, ordered_model in enumerate(ordered_forest):
-            print("\nModel {}".format(model_index))
+        # final_forest = []
+        # for model_index, ordered_model in enumerate(ordered_forest):
+        #     print("\nModel {}".format(model_index))
             
             # INFERENCE
             # =========
@@ -401,51 +469,38 @@ def main(th_acc=0, num_models=16):
             # For each class
             #     - Keep only the number of trees that fit in the architecture
             #     - Separate them into three groups per class
-            final_model = []
-            for class_num, class_trees in enumerate(ordered_model):
-                total_nodes = 0
-                num_trees = 0
-                for num_tree, tree in enumerate(class_trees):
-                   tree_nodes = tree_num_nodes(tree['tree_structure'])
-                   if total_nodes + tree_nodes > class_nodes:
-                       num_trees = num_tree
-                       break
-                   else:
-                       num_trees += 1
-                       total_nodes += tree_nodes
-                
-                # Sort the selected trees by average depth
-                selection = [(tree_average_depth(tree), tree)
-                            for tree in class_trees[0:num_trees]]
-                selection.sort()
-                
-                # Distribute them into the three groups
-                class_selected_trees = [[], [], []]
-                for i, (_, tree) in enumerate(selection):
-                    class_selected_trees[i % 3].append(tree)
-                
-                final_model.append(class_selected_trees)
+            #final_model = get_final_model(ordered_model)
             
             # Inference
             #     - Compare floating and fixed point representations
             #     - Calculate the cycles
-            print("\nCalculating inference metrics...")
+            #print("\nCalculating inference metrics...")
             # (visited_nodes, avg_nodes,
             # used_cycles, avg_cycles) = get_cycles(final_model, X_test_k)
             # float_acc = float_accuracy(final_model, X_test_k, y_test)
             # fixed_acc = fixed_accuracy(final_model, X_test_k, y_test, 7, 3)
             # float_acc = float_accuracy(final_model, X_test_k, y_test)
             # print("FLOAT_ACC: {}".format(float_acc))
+            
             # Load the centroids dictionary
-            centroids_dict = np.load(K_MEANS_DIR + '/' + image_name + '_centroids.npy', allow_pickle=True)
-            centroids_dict = dict(centroids_dict)
-            fixed_acc = fixed_accuracy(final_model, X_test_k, y_test, 7, 3, centroids_dict)
-            print("FIXED_ACC: {}".format(fixed_acc))
-            break
+            # centroids_dict = np.load(K_MEANS_DIR + '/' + image_name + '_centroids.npy', allow_pickle=True)
+            # centroids_dict = dict(centroids_dict)
+            # fixed_acc = fixed_accuracy(final_model, X_test_k, y_test, 7, 3, centroids_dict)
+            # print("FIXED_ACC: {}".format(fixed_acc))
+
+            #break
             #print("VISITED_NODES: {} ({} avg.)".format(visited_nodes, avg_nodes))
             #print("USED_CYCLES: {} ({} avg.)".format(used_cycles, avg_cycles))
-            
-            
+        
+        for model_index, model in enumerate(trained_forest):
+            print("\nModel {}".format(model_index))
+
+            # Cross-validation
+            cv_float_acc, cv_fixed_acc = cross_val_float_fixed_accuracy(model, X_train_k, y_train, num_classes, 7, 3)
+            print("CV_FLOAT_ACC: {}".format(cv_float_acc))
+            print("CV_FIXED_ACC: {}".format(cv_fixed_acc))
+            if model_index == 1:    # 2 iterations
+                break
             
 
 if __name__ == "__main__":
