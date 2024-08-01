@@ -457,11 +457,11 @@ def main(th_acc=0, num_models=16):
         print('\nForest with {} models and {} features'.format(num_models, k))
 
         # Get ordered forest
-        # ordered_forest = get_ordered_forest(trained_forest, num_classes)
+        ordered_forest = get_ordered_forest(trained_forest, num_classes)
         
-        # final_forest = []
-        # for model_index, ordered_model in enumerate(ordered_forest):
-        #     print("\nModel {}".format(model_index))
+        final_forest = []
+        for model_index, ordered_model in enumerate(ordered_forest):
+            print("\nModel {}".format(model_index))
             
             # INFERENCE
             # =========
@@ -469,38 +469,39 @@ def main(th_acc=0, num_models=16):
             # For each class
             #     - Keep only the number of trees that fit in the architecture
             #     - Separate them into three groups per class
-            #final_model = get_final_model(ordered_model)
+            final_model = get_final_model(ordered_model)
             
             # Inference
             #     - Compare floating and fixed point representations
             #     - Calculate the cycles
-            #print("\nCalculating inference metrics...")
+            print("\nCalculating inference metrics...")
             # (visited_nodes, avg_nodes,
             # used_cycles, avg_cycles) = get_cycles(final_model, X_test_k)
             # float_acc = float_accuracy(final_model, X_test_k, y_test)
             # fixed_acc = fixed_accuracy(final_model, X_test_k, y_test, 7, 3)
             # float_acc = float_accuracy(final_model, X_test_k, y_test)
             # print("FLOAT_ACC: {}".format(float_acc))
-            
-            # Load the centroids dictionary
-            # centroids_dict = np.load(K_MEANS_DIR + '/' + image_name + '_centroids.npy', allow_pickle=True)
-            # centroids_dict = dict(centroids_dict)
-            # fixed_acc = fixed_accuracy(final_model, X_test_k, y_test, 7, 3, centroids_dict)
-            # print("FIXED_ACC: {}".format(fixed_acc))
-
-            #break
+            if model_index == 1:    # 2 iterations
+                fixed_acc = fixed_accuracy(final_model, X_test_k, y_test, 7, 3)
+                print("FIXED_ACC: {}".format(fixed_acc))
+                # Load the centroids dictionary
+                centroids_dict = np.load(K_MEANS_DIR + '/' + image_name + '_centroids.npy', allow_pickle=True)
+                centroids_dict = dict(centroids_dict)
+                fixed_acc = fixed_accuracy(final_model, X_test_k, y_test, 7, 3, centroids_dict)
+                print("FIXED_ACC_CLUSTER: {}".format(fixed_acc))
+                break
             #print("VISITED_NODES: {} ({} avg.)".format(visited_nodes, avg_nodes))
             #print("USED_CYCLES: {} ({} avg.)".format(used_cycles, avg_cycles))
         
-        for model_index, model in enumerate(trained_forest):
-            print("\nModel {}".format(model_index))
+        # for model_index, model in enumerate(trained_forest):
+        #     print("\nModel {}".format(model_index))
 
-            # Cross-validation
-            cv_float_acc, cv_fixed_acc = cross_val_float_fixed_accuracy(model, X_train_k, y_train, num_classes, 7, 3)
-            print("CV_FLOAT_ACC: {}".format(cv_float_acc))
-            print("CV_FIXED_ACC: {}".format(cv_fixed_acc))
-            if model_index == 1:    # 2 iterations
-                break
+        #     # Cross-validation
+        #     cv_float_acc, cv_fixed_acc = cross_val_float_fixed_accuracy(model, X_train_k, y_train, num_classes, 7, 3)
+        #     print("CV_FLOAT_ACC: {}".format(cv_float_acc))
+        #     print("CV_FIXED_ACC: {}".format(cv_fixed_acc))
+        #     if model_index == 1:    # 2 iterations
+        #         break
             
 
 if __name__ == "__main__":
