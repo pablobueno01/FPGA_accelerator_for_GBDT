@@ -1,3 +1,37 @@
-version https://git-lfs.github.com/spec/v1
-oid sha256:105b90702257d421b2d10a56e8c8b7bc1625e171e907fff1e8d0730f86caaf1e
-size 879
+-------------------------------------------------------------------------------
+-- Generic data size register
+-------------------------------------------------------------------------------
+
+library IEEE;
+use IEEE.std_logic_1164.all;
+
+entity reg is
+    generic(BITS: positive);
+    port(-- Control signals
+         Clk:   in std_logic;
+         Reset: in std_logic;
+         Load:  in std_logic;
+         
+         -- Input
+         Din: in std_logic_vector(BITS - 1 downto 0);
+         
+         -- Output
+         Dout: out std_logic_vector(BITS - 1 downto 0));
+end reg;
+
+architecture Behavioral of reg is
+begin
+process (Clk)
+begin
+    if rising_edge(Clk) then
+        if Reset = '1' then
+            Dout <= (others => '0');
+        else
+            if Load = '1' then
+                Dout <= Din;
+            end if;
+        end if;
+    end if;
+end process;
+end Behavioral;
+

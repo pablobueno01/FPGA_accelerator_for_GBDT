@@ -131,6 +131,7 @@ def main():
         ordered_forest = get_ordered_forest(trained_forest, num_classes)
 
         hist = {}
+        max_total_nodes = 0
         for model_index, ordered_model in enumerate(ordered_forest):
             print("\nModel {}".format(model_index))
             # For each class
@@ -148,29 +149,32 @@ def main():
                    else:
                        num_trees += 1
                        total_nodes += tree_nodes
-                
-                # Sort the selected trees by average depth
-                selection = [(tree_average_depth(tree), tree)
-                            for tree in class_trees[0:num_trees]]
-                selection.sort()
-                
-                # Distribute them into the three groups
-                class_selected_trees = [[], [], []]
-                for i, (_, tree) in enumerate(selection):
-                    class_selected_trees[i % 3].append(tree)
-                
-                final_model.append(class_selected_trees)
 
-            min_cmp_value = float('inf')
-            max_cmp_value = float('-inf')
-            min_leaf = float('inf')
-            max_leaf = float('-inf')
-            max_rel_right = 0
+                if total_nodes > max_total_nodes:
+                    max_total_nodes = total_nodes
+                
+            #     # Sort the selected trees by average depth
+            #     selection = [(tree_average_depth(tree), tree)
+            #                 for tree in class_trees[0:num_trees]]
+            #     selection.sort()
+                
+            #     # Distribute them into the three groups
+            #     class_selected_trees = [[], [], []]
+            #     for i, (_, tree) in enumerate(selection):
+            #         class_selected_trees[i % 3].append(tree)
+                
+            #     final_model.append(class_selected_trees)
+
+            # min_cmp_value = float('inf')
+            # max_cmp_value = float('-inf')
+            # min_leaf = float('inf')
+            # max_leaf = float('-inf')
+            # max_rel_right = 0
             
-            for class_num, class_trees in enumerate(final_model):
-                for group in class_trees:
-                    for tree in group:
-                        tree_structure = tree['tree_structure']
+            # for class_num, class_trees in enumerate(final_model):
+            #     for group in class_trees:
+            #         for tree in group:
+            #             tree_structure = tree['tree_structure']
                         # tree_min_cmp_value, tree_max_cmp_value = min_max_cmp_value(tree_structure)
                         # if tree_min_cmp_value < min_cmp_value:
                         #     min_cmp_value = tree_min_cmp_value
@@ -184,7 +188,7 @@ def main():
                         #     min_leaf = tree_min_leaf
                         # if tree_max_leaf > max_leaf:
                         #     max_leaf = tree_max_leaf
-                        cmp_value_hist(tree_structure, hist)
+                        # cmp_value_hist(tree_structure, hist)
 
             # print("Minimum value of cmp_value: {}".format(min_cmp_value))
             # print("Maximum value of cmp_value: {}".format(max_cmp_value))
@@ -194,24 +198,28 @@ def main():
         #print("Unique values of cmp_value: {}".format(len(np.unique(hist))))
 
         # Perform K-means clustering
-        samples = []
-        for key, count in hist.items():
-            samples.extend([key] * count)
-        samples = np.array(samples).reshape(-1, 1)
-        kmeans = KMeans(n_clusters=256)
-        kmeans.fit(samples)
+        # samples = []
+        # for key, count in hist.items():
+        #     samples.extend([key] * count)
+        # samples = np.array(samples).reshape(-1, 1)
+        # kmeans = KMeans(n_clusters=256)
+        # kmeans.fit(samples)
 
-        # Get a new histogram with the centroids
-        centroids = kmeans.cluster_centers_.flatten()
-        new_hist = {}
-        for key in hist.keys():
-            cluster_label = kmeans.predict([[key]])[0]
-            new_hist[key] = centroids[cluster_label]
+        # # Get a new histogram with the centroids
+        # centroids = kmeans.cluster_centers_.flatten()
+        # new_hist = {}
+        # for key in hist.keys():
+        #     cluster_label = kmeans.predict([[key]])[0]
+        #     new_hist[key] = centroids[cluster_label]
         
-        # Save the histogram with the centroids
-        centroids_dict = list(new_hist.items())
-        centroids_dict = np.array(centroids_dict, dtype=object)
-        np.save("{}/{}_centroids.npy".format(K_MEANS_DIR, image_name), centroids_dict)
+        # # Save the histogram with the centroids
+        # centroids_dict = list(new_hist.items())
+        # centroids_dict = np.array(centroids_dict, dtype=object)
+        # np.save("{}/{}_centroids.npy".format(K_MEANS_DIR, image_name), centroids_dict)
+
+        
+        # Print maximum total nodes
+        print("Maximum total nodes: {}".format(max_total_nodes))
 
 if __name__ == "__main__":
     main()
