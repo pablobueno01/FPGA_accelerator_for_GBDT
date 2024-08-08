@@ -15,7 +15,7 @@ LEAF_VALUE_BITS = 16
 LEAF_VALUE_FRAC_BITS = 12
 ADDR_NEXT_TREE_BITS = 14
 
-def write_tree(tree_structure, file, addr_next_tree='0', is_last_tree='0'):
+def write_tree(tree_structure, file, addr_next_tree, is_last_tree, rom_addr):
     if 'split_index' in tree_structure:
         # It is a non-leaf node
         left_child = tree_structure['left_child']
@@ -26,15 +26,16 @@ def write_tree(tree_structure, file, addr_next_tree='0', is_last_tree='0'):
         # Construct the node
         feature_bin = bin(feature)[2:].zfill(FEATURE_BITS)
         cmp_value_bin = bin(cmp_value)[2:].zfill(CMP_VALUE_BITS)
-        rel_right_child_bin = bin(tree_num_nodes(left_child) + 1)[2:].zfill(REL_RIGHT_CHILD_BITS)
+        rel_right_child_int = tree_num_nodes(left_child) + 1
+        rel_right_child_bin = bin(rel_right_child_int)[2:].zfill(REL_RIGHT_CHILD_BITS)
         node_bin = feature_bin + cmp_value_bin + rel_right_child_bin + '0'
         node_int = int(node_bin, 2)
         node_hex = '{:x}'.format(node_int).zfill(8)
         # Write the node to the file
-        file.write('\tx"' + node_hex + '"\n')
+        file.write('\t{} => x"'.format(rom_addr) + node_hex + '",\n')
         # Continue with the children
-        write_tree(left_child, file, addr_next_tree, is_last_tree)
-        write_tree(right_child, file, addr_next_tree, is_last_tree)
+        write_tree(left_child, file, addr_next_tree, is_last_tree, rom_addr + 1)
+        write_tree(right_child, file, addr_next_tree, is_last_tree, rom_addr + rel_right_child_int)
     else:
         # It is a leaf node
         leaf_value = tree_structure['leaf_value']
@@ -44,7 +45,7 @@ def write_tree(tree_structure, file, addr_next_tree='0', is_last_tree='0'):
         node_int = int(node_bin, 2)
         node_hex = '{:x}'.format(node_int).zfill(8)
         # Write the node to the file
-        file.write('\tx"' + node_hex + '"\n')
+        file.write('\t{} => x"'.format(rom_addr) + node_hex + '",\n')
 
 def main(model_index=0):
 
@@ -105,7 +106,8 @@ def main(model_index=0):
             file_name = CLASS_ROM_DIR+'/{}_class_{}.txt'.format(image_name, class_num)
             file = open(file_name, 'w')
             file.truncate(0)
-            addr_next_tree = 0
+            addr_next_tree = 0  # Address of the next tree
+            rom_addr = 0     # Address of the current tree
             for group in class_trees:
                 for tree in group:
                     tree_structure = tree['tree_structure']
@@ -113,7 +115,8 @@ def main(model_index=0):
                     addr_next_tree += tree_size
                     is_last_tree = '1' if tree is group[-1] else '0'
                     write_tree(tree_structure, file, bin(addr_next_tree)[2:].zfill(ADDR_NEXT_TREE_BITS), 
-                               is_last_tree)
+                                is_last_tree, rom_addr)
+                    rom_addr = addr_next_tree
             print('Class {} written to {}'.format(class_num, file_name))
             file.close()
             exit()
