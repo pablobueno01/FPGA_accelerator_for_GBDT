@@ -63,43 +63,45 @@ def main(model_index=0):
         print("\n----------------{}----------------".format(image_name))
 
         # Obtain the reduced data
-        # top_k_ft_path = next((os.path.join(FEATURE_IMPORTANCES_DIR, subdir, file) for file in os.listdir(FEATURE_IMPORTANCES_DIR+'/'+subdir) if file.startswith(image_name + "_top_")), None)
-        # k = int(top_k_ft_path.split("_features.npy")[0].split("_top_")[-1]) # Number of features
+        top_k_ft_path = next((os.path.join(FEATURE_IMPORTANCES_DIR, subdir, file) for file in os.listdir(FEATURE_IMPORTANCES_DIR+'/'+subdir) if file.startswith(image_name + "_top_")), None)
+        k = int(top_k_ft_path.split("_features.npy")[0].split("_top_")[-1]) # Number of features
 
-        # # Load the trained forest model
-        # trained_forest = joblib.load("{}/{}/{}_forest_{}_models.joblib".format(MODELS_DIR, subdir,image_name, num_models))
-        # print('\nForest with {} models and {} features'.format(num_models, k))
+        # Load the trained forest model
+        trained_forest = joblib.load("{}/{}/{}_forest_{}_models.joblib".format(MODELS_DIR, subdir,image_name, num_models))
+        print('\nModel {} of the forest with {} features'.format(model_index, k))
 
-        # # Load the trained model
-        # model = trained_forest[model_index]
-        # # Get model trees
-        # model = model.booster_.dump_model()['tree_info']
-        # # Reorder model
-        # trained_class_trees = len(model) // num_classes
-        # ordered_model = [[model[tree_num * num_classes + class_num]
-        #                     for tree_num in range(trained_class_trees)]
-        #                 for class_num in range(num_classes)]
-        # final_model = get_final_model(ordered_model)
-        group1=[
-            {'tree_structure': {'split_index': 0, 'split_feature': 2, 'threshold': 85,
-                                'left_child': {'split_index': 1, 'split_feature': 6, 'threshold': 42,
-                                                'left_child': {'leaf_value': 0.3},
-                                                'right_child': {'leaf_value': 0.5}
-                                                },
-                                'right_child': {'leaf_value': 0.7}
-                                }
-            },
-            {'tree_structure': {'split_index': 0, 'split_feature': 15, 'threshold': 34,
-                                'left_child': {'leaf_value': 0.05},
-                                'right_child': {'leaf_value': -0.05}
-                                }
-            }
-        ]
-        group2=[
-            {'tree_structure': {'leaf_value': 0.1}}
-        ]
-        class_trees=[group1, group2]
-        final_model=[class_trees]
+        # Load the trained model
+        model = trained_forest[model_index]
+        # Get model trees
+        model = model.booster_.dump_model()['tree_info']
+        # Reorder model
+        trained_class_trees = len(model) // num_classes
+        ordered_model = [[model[tree_num * num_classes + class_num]
+                            for tree_num in range(trained_class_trees)]
+                        for class_num in range(num_classes)]
+        final_model = get_final_model(ordered_model)
+
+        # ONLY FOR MANUAL TESTING
+        # group1=[
+        #     {'tree_structure': {'split_index': 0, 'split_feature': 2, 'threshold': 85,
+        #                         'left_child': {'split_index': 1, 'split_feature': 6, 'threshold': 42,
+        #                                         'left_child': {'leaf_value': 0.3},
+        #                                         'right_child': {'leaf_value': 0.5}
+        #                                         },
+        #                         'right_child': {'leaf_value': 0.7}
+        #                         }
+        #     },
+        #     {'tree_structure': {'split_index': 0, 'split_feature': 15, 'threshold': 34,
+        #                         'left_child': {'leaf_value': 0.05},
+        #                         'right_child': {'leaf_value': -0.05}
+        #                         }
+        #     }
+        # ]
+        # group2=[
+        #     {'tree_structure': {'leaf_value': 0.1}}
+        # ]
+        # class_trees=[group1, group2]
+        # final_model=[class_trees]
 
         # For each class write the trees in a file
         for class_num, class_trees in enumerate(final_model):
@@ -119,6 +121,6 @@ def main(model_index=0):
                     rom_addr = addr_next_tree
             print('Class {} written to {}'.format(class_num, file_name))
             file.close()
-            exit()
+
 if __name__ == "__main__":
     main(model_index=0)
