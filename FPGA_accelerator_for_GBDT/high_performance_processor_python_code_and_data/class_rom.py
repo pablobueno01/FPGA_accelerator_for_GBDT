@@ -4,7 +4,7 @@ from __future__ import division, absolute_import, print_function
 from inference_fixed import *
 from ranges import tree_num_nodes
 
-CLASS_ROM_DIR = "class_roms"
+CLASS_ROM_DIR = "../FPGA_VHDL_code_and_data/class_roms"
 
 # Number of bits for each field in a non-leaf tree
 FEATURE_BITS = 8
