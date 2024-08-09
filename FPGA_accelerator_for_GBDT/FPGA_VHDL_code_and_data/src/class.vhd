@@ -9,7 +9,8 @@ use work.types.all;
 
 entity class is
     generic(TREE_RAM_BITS: positive;
-            NUM_FEATURES:  positive);
+            NUM_FEATURES:  positive;
+            SELECT_ROM:    integer := 0);
     port(-- Generic control signals
          Clk:   in std_logic;
          Reset: in std_logic;
@@ -53,7 +54,8 @@ architecture Behavioral of class is
     
     component rom is --component ram is
         generic(ADDRESS_BITS: positive := 16;
-                DATA_LENGTH:  positive := 32);
+                DATA_LENGTH:  positive := 32;
+                SELECT_ROM:   integer := 0);
         port(-- Control signals
              Clk: in std_logic;
              --We:  in std_logic;
@@ -231,7 +233,8 @@ begin
     -- RAM where all the trees of the class are located
     trees_data_rom: rom --trees_data_ram: ram
         generic map(ADDRESS_BITS => TREE_RAM_BITS,
-                    DATA_LENGTH => 32)
+                    DATA_LENGTH => 32,
+                    SELECT_ROM   => SELECT_ROM)
         port map(Clk  => Clk,
                 --  We   => td_we,
                  Re   => td_re,

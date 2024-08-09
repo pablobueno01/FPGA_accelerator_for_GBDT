@@ -52,7 +52,8 @@ architecture Behavioral of image is
     
     component class is
         generic(TREE_RAM_BITS: positive;
-                NUM_FEATURES:  positive);
+                NUM_FEATURES:  positive;
+                SELECT_ROM:   integer);
         port(-- Generic control signals
              Clk:   in std_logic;
              Reset: in std_logic;
@@ -208,7 +209,8 @@ begin
     classes: for i in NUM_CLASSES - 1 downto 0 generate
         class_manager: class
             generic map(TREE_RAM_BITS => TREE_RAM_BITS,
-                        NUM_FEATURES  => NUM_FEATURES)
+                        NUM_FEATURES  => NUM_FEATURES,
+                        SELECT_ROM    => i)
             port map(Clk        => Clk ,
                      Reset      => Reset,
                      Start      => cm_start,
