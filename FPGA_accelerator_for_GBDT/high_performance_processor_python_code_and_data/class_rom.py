@@ -119,6 +119,9 @@ def main(model_index=0):
                     write_tree(tree_structure, file, bin(addr_next_tree)[2:].zfill(ADDR_NEXT_TREE_BITS), 
                                 is_last_tree, rom_addr)
                     rom_addr = addr_next_tree
+                if group is not class_trees[-1]:
+                    file.write('\n')
+                    print('Initial addr:', rom_addr)
             print('Class {} written to {}'.format(class_num, file_name))
             file.close()
 
