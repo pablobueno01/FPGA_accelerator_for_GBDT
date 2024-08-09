@@ -18,7 +18,9 @@ entity rom is
          Addr: in std_logic_vector (ADDRESS_BITS - 1 downto 0);
          
          -- Output
-         Dout: out std_logic_vector (DATA_LENGTH - 1 downto 0));
+         Dout: out std_logic_vector (DATA_LENGTH - 1 downto 0);
+         initial_addr_2: out std_logic_vector (ADDRESS_BITS - 1 downto 0);
+         initial_addr_3: out std_logic_vector (ADDRESS_BITS - 1 downto 0));
 end rom;
 
 architecture Behavioral of rom is
@@ -5080,6 +5082,8 @@ begin
             5046 => x"ffe14edf",
             others => (others => '0')
         );
+        initial_addr_2 <= std_logic_vector(to_unsigned(1715, initial_addr_2'length));
+        initial_addr_3 <= std_logic_vector(to_unsigned(3321, initial_addr_3'length));
     end generate gen_rom_0;
 
     gen_rom_1: if SELECT_ROM = 1 generate
@@ -8916,6 +8920,8 @@ begin
         
             others => (others => '0')
         );
+        initial_addr_2 <= std_logic_vector(to_unsigned(1331, initial_addr_2'length));
+        initial_addr_3 <= std_logic_vector(to_unsigned(2571, initial_addr_3'length));
     end generate gen_rom_1;
 
     gen_rom_2: if SELECT_ROM = 2 generate
@@ -13224,6 +13230,8 @@ begin
         
             others => (others => '0')
         );
+        initial_addr_2 <= std_logic_vector(to_unsigned(1489, initial_addr_2'length));
+        initial_addr_3 <= std_logic_vector(to_unsigned(2851, initial_addr_3'length));
     end generate gen_rom_2;
 
     gen_rom_3: if SELECT_ROM = 3 generate
@@ -18714,6 +18722,8 @@ begin
         
             others => (others => '0')
         );
+        initial_addr_2 <= std_logic_vector(to_unsigned(1943, initial_addr_2'length));
+        initial_addr_3 <= std_logic_vector(to_unsigned(3615, initial_addr_3'length));
     end generate gen_rom_3;
 
     gen_rom_4: if SELECT_ROM = 4 generate
@@ -23914,6 +23924,8 @@ begin
         
             others => (others => '0')
         );
+        initial_addr_2 <= std_logic_vector(to_unsigned(1797, initial_addr_2'length));
+        initial_addr_3 <= std_logic_vector(to_unsigned(3471, initial_addr_3'length));
     end generate gen_rom_4;
 
     gen_rom_5: if SELECT_ROM = 5 generate
@@ -29096,6 +29108,8 @@ begin
         
             others => (others => '0')
         );
+        initial_addr_2 <= std_logic_vector(to_unsigned(1711, initial_addr_2'length));
+        initial_addr_3 <= std_logic_vector(to_unsigned(3455, initial_addr_3'length));
     end generate gen_rom_5;
 
     gen_rom_6: if SELECT_ROM = 6 generate
@@ -31920,6 +31934,8 @@ begin
         
             others => (others => '0')
         );
+        initial_addr_2 <= std_logic_vector(to_unsigned(953, initial_addr_2'length));
+        initial_addr_3 <= std_logic_vector(to_unsigned(1881, initial_addr_3'length));
     end generate gen_rom_6;
 
     gen_rom_7: if SELECT_ROM = 7 generate
@@ -37404,6 +37420,8 @@ begin
         
             others => (others => '0')
         );
+        initial_addr_2 <= std_logic_vector(to_unsigned(1757, initial_addr_2'length));
+        initial_addr_3 <= std_logic_vector(to_unsigned(3651, initial_addr_3'length));
     end generate gen_rom_7;
 
     gen_rom_8: if SELECT_ROM = 8 generate
@@ -42016,6 +42034,8 @@ begin
         
             others => (others => '0')
         );
+        initial_addr_2 <= std_logic_vector(to_unsigned(1473, initial_addr_2'length));
+        initial_addr_3 <= std_logic_vector(to_unsigned(2995, initial_addr_3'length));
     end generate gen_rom_8;
 
     gen_rom_9: if SELECT_ROM = 9 generate
@@ -45198,6 +45218,8 @@ begin
         
             others => (others => '0')
         );
+        initial_addr_2 <= std_logic_vector(to_unsigned(1063, initial_addr_2'length));
+        initial_addr_3 <= std_logic_vector(to_unsigned(2143, initial_addr_3'length));
     end generate gen_rom_9;
 
     gen_rom_10: if SELECT_ROM = 10 generate
@@ -46534,6 +46556,8 @@ begin
         
             others => (others => '0')
         );
+        initial_addr_2 <= std_logic_vector(to_unsigned(455, initial_addr_2'length));
+        initial_addr_3 <= std_logic_vector(to_unsigned(899, initial_addr_3'length));
     end generate gen_rom_10;
 
     gen_rom_11: if SELECT_ROM = 11 generate
@@ -50818,6 +50842,8 @@ begin
         
             others => (others => '0')
         );
+        initial_addr_2 <= std_logic_vector(to_unsigned(1469, initial_addr_2'length));
+        initial_addr_3 <= std_logic_vector(to_unsigned(2865, initial_addr_3'length));
     end generate gen_rom_11;
 
     gen_rom_12: if SELECT_ROM = 12 generate
@@ -51570,6 +51596,8 @@ begin
         
             others => (others => '0')
         );
+        initial_addr_2 <= std_logic_vector(to_unsigned(253, initial_addr_2'length));
+        initial_addr_3 <= std_logic_vector(to_unsigned(499, initial_addr_3'length));
     end generate gen_rom_12;
 
     process (Clk)

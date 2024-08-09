@@ -66,7 +66,9 @@ architecture Behavioral of class is
              --Din:  in std_logic_vector(DATA_LENGTH - 1 downto 0);
              
              -- Output
-             Dout: out std_logic_vector(DATA_LENGTH - 1 downto 0));
+             Dout: out std_logic_vector (DATA_LENGTH - 1 downto 0);
+            initial_addr_2: out std_logic_vector (ADDRESS_BITS - 1 downto 0);
+            initial_addr_3: out std_logic_vector (ADDRESS_BITS - 1 downto 0));
     end component;
     
     component mux is
@@ -100,7 +102,7 @@ architecture Behavioral of class is
     signal ca_1_load, ca_1_reset: std_logic;
     
     -- (i)nitial_(a)ddr_reg_(2) control signals
-    signal initial_addr_2: std_logic_vector(TREE_RAM_BITS - 1 downto 0) := "0000000000001";
+    signal initial_addr_2: std_logic_vector(TREE_RAM_BITS - 1 downto 0);
     -- signal ia_2_load, ia_2_reset: std_logic;
     
     -- (c)urr_(a)ddr_reg_(2) control signals
@@ -109,7 +111,7 @@ architecture Behavioral of class is
     signal ca_2_load, ca_2_reset: std_logic;
     
     -- (i)nitial_(a)ddr_reg_(3) control signals
-    signal initial_addr_3: std_logic_vector(TREE_RAM_BITS - 1 downto 0) := "0000000000010";
+    signal initial_addr_3: std_logic_vector(TREE_RAM_BITS - 1 downto 0);
     -- signal ia_3_load, ia_3_reset: std_logic;
     
     -- (c)urr_(a)ddr_reg_(3) control signals
@@ -240,7 +242,9 @@ begin
                  Re   => td_re,
                  Addr => td_addr,
                 --  Din  => td_din,
-                 Dout => td_dout);
+                 Dout => td_dout,
+                 initial_addr_2 => initial_addr_2,
+                 initial_addr_3 => initial_addr_3);
     
     -- RAM input
     -- td_din <= Ram_din;
