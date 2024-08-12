@@ -1,3 +1,4 @@
+
 begin
 
 	gen_rom_0: if SELECT_ROM = 0 generate
@@ -1969,7 +1970,7 @@ begin
 			1964 => x"ffd61ebf",
 			1965 => x"00371ebf",
 			1966 => x"ff101ebf",
-			others => '0'
+			others => (others => '0')
 		);
 		initial_addr_2 <= std_logic_vector(to_unsigned(665, initial_addr_2'length));
 		initial_addr_3 <= std_logic_vector(to_unsigned(1333, initial_addr_3'length));
@@ -4846,7 +4847,7 @@ begin
 			2866 => x"01007704",
 			2867 => x"005f2cd7",
 			2868 => x"ff102cd7",
-			others => '0'
+			others => (others => '0')
 		);
 		initial_addr_2 <= std_logic_vector(to_unsigned(985, initial_addr_2'length));
 		initial_addr_3 <= std_logic_vector(to_unsigned(1925, initial_addr_3'length));
@@ -11231,7 +11232,7 @@ begin
 			6374 => x"017663a7",
 			6375 => x"ff9163a7",
 			6376 => x"fe7663a7",
-			others => '0'
+			others => (others => '0')
 		);
 		initial_addr_2 <= std_logic_vector(to_unsigned(2131, initial_addr_2'length));
 		initial_addr_3 <= std_logic_vector(to_unsigned(4329, initial_addr_3'length));
@@ -13512,7 +13513,7 @@ begin
 			2270 => x"ffdc2387",
 			2271 => x"ffd52387",
 			2272 => x"fea02387",
-			others => '0'
+			others => (others => '0')
 		);
 		initial_addr_2 <= std_logic_vector(to_unsigned(749, initial_addr_2'length));
 		initial_addr_3 <= std_logic_vector(to_unsigned(1513, initial_addr_3'length));
@@ -19163,7 +19164,7 @@ begin
 			5640 => x"fff0582f",
 			5641 => x"ffe0582f",
 			5642 => x"ff29582f",
-			others => '0'
+			others => (others => '0')
 		);
 		initial_addr_2 <= std_logic_vector(to_unsigned(1943, initial_addr_2'length));
 		initial_addr_3 <= std_logic_vector(to_unsigned(3731, initial_addr_3'length));
@@ -20514,7 +20515,7 @@ begin
 			1340 => x"01011d04",
 			1341 => x"063d14ff",
 			1342 => x"fe5114ff",
-			others => '0'
+			others => (others => '0')
 		);
 		initial_addr_2 <= std_logic_vector(to_unsigned(457, initial_addr_2'length));
 		initial_addr_3 <= std_logic_vector(to_unsigned(899, initial_addr_3'length));
@@ -23223,7 +23224,7 @@ begin
 			2698 => x"001b2a37",
 			2699 => x"031f2a37",
 			2700 => x"fe552a37",
-			others => '0'
+			others => (others => '0')
 		);
 		initial_addr_2 <= std_logic_vector(to_unsigned(923, initial_addr_2'length));
 		initial_addr_3 <= std_logic_vector(to_unsigned(1809, initial_addr_3'length));
@@ -31322,7 +31323,7 @@ begin
 			8088 => x"03052504",
 			8089 => x"00a87e6f",
 			8090 => x"00037e6f",
-			others => '0'
+			others => (others => '0')
 		);
 		initial_addr_2 <= std_logic_vector(to_unsigned(2726, initial_addr_2'length));
 		initial_addr_3 <= std_logic_vector(to_unsigned(5504, initial_addr_3'length));
@@ -36783,7 +36784,7 @@ begin
 			5450 => x"00f35537",
 			5451 => x"ffd85537",
 			5452 => x"fe895537",
-			others => '0'
+			others => (others => '0')
 		);
 		initial_addr_2 <= std_logic_vector(to_unsigned(1801, initial_addr_2'length));
 		initial_addr_3 <= std_logic_vector(to_unsigned(3637, initial_addr_3'length));
@@ -44977,7 +44978,7 @@ begin
 			8183 => x"0b073304",
 			8184 => x"01577feb",
 			8185 => x"ffff7feb",
-			others => '0'
+			others => (others => '0')
 		);
 		initial_addr_2 <= std_logic_vector(to_unsigned(2719, initial_addr_2'length));
 		initial_addr_3 <= std_logic_vector(to_unsigned(5506, initial_addr_3'length));
@@ -50076,7 +50077,7 @@ begin
 			5088 => x"ff364f8f",
 			5089 => x"01704f8f",
 			5090 => x"fec24f8f",
-			others => '0'
+			others => (others => '0')
 		);
 		initial_addr_2 <= std_logic_vector(to_unsigned(1809, initial_addr_2'length));
 		initial_addr_3 <= std_logic_vector(to_unsigned(3441, initial_addr_3'length));
@@ -54153,7 +54154,7 @@ begin
 			4066 => x"fe583f97",
 			4067 => x"006a3f97",
 			4068 => x"fe633f97",
-			others => '0'
+			others => (others => '0')
 		);
 		initial_addr_2 <= std_logic_vector(to_unsigned(1391, initial_addr_2'length));
 		initial_addr_3 <= std_logic_vector(to_unsigned(2741, initial_addr_3'length));
@@ -57610,7 +57611,7 @@ begin
 			3446 => x"ffd935e7",
 			3447 => x"016f35e7",
 			3448 => x"fe8135e7",
-			others => '0'
+			others => (others => '0')
 		);
 		initial_addr_2 <= std_logic_vector(to_unsigned(1189, initial_addr_2'length));
 		initial_addr_3 <= std_logic_vector(to_unsigned(2319, initial_addr_3'length));
@@ -62239,7 +62240,7 @@ begin
 			4618 => x"00734837",
 			4619 => x"fffa4837",
 			4620 => x"ff574837",
-			others => '0'
+			others => (others => '0')
 		);
 		initial_addr_2 <= std_logic_vector(to_unsigned(1563, initial_addr_2'length));
 		initial_addr_3 <= std_logic_vector(to_unsigned(3083, initial_addr_3'length));
@@ -70406,7 +70407,7 @@ begin
 			8156 => x"0704ef04",
 			8157 => x"ffee7f7f",
 			8158 => x"fe887f7f",
-			others => '0'
+			others => (others => '0')
 		);
 		initial_addr_2 <= std_logic_vector(to_unsigned(2774, initial_addr_2'length));
 		initial_addr_3 <= std_logic_vector(to_unsigned(5638, initial_addr_3'length));
@@ -74991,7 +74992,7 @@ begin
 			4574 => x"0504d704",
 			4575 => x"fff24787",
 			4576 => x"fe684787",
-			others => '0'
+			others => (others => '0')
 		);
 		initial_addr_2 <= std_logic_vector(to_unsigned(1541, initial_addr_2'length));
 		initial_addr_3 <= std_logic_vector(to_unsigned(3067, initial_addr_3'length));

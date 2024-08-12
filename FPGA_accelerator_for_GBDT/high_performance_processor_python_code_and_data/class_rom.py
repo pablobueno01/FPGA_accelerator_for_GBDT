@@ -110,7 +110,7 @@ def main(model_index=0):
         file_name = CLASS_ROM_DIR+'/{}_rom.txt'.format(image_name)
         file = open(file_name, 'w')
         file.truncate(0)
-        file.write('begin\n')
+        file.write('\nbegin\n')
         for class_num, class_trees in enumerate(final_model):
             file.write('\n\tgen_rom_{}: if SELECT_ROM = {} generate\n'.format(class_num, class_num))
             file.write('\t\tbank <= (\n')
@@ -131,7 +131,7 @@ def main(model_index=0):
                     initial_addr_2 = rom_addr
                 elif group is class_trees[1]:
                     initial_addr_3 = rom_addr
-            file.write('\t\t\tothers => \'0\'\n')
+            file.write('\t\t\tothers => (others => \'0\')\n')
             file.write('\t\t);\n')
             file.write('\t\tinitial_addr_2 <= std_logic_vector(to_unsigned({}, initial_addr_2\'length));\n'.format(initial_addr_2))
             file.write('\t\tinitial_addr_3 <= std_logic_vector(to_unsigned({}, initial_addr_3\'length));\n'.format(initial_addr_3))
