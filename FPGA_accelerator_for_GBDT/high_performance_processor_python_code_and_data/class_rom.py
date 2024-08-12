@@ -5,9 +5,10 @@ from inference_fixed import *
 from ranges import tree_num_nodes
 
 
-OPTIM = False
+OPTIM = True
 
 CLASS_ROM_DIR = "../FPGA_VHDL_code_and_data/class_roms"
+CENTROIDS_ROM_DIR = "../FPGA_VHDL_code_and_data_OPTIM/centroids_roms"
 
 # Number of bits for each field in a non-leaf tree
 FEATURE_BITS = 8
@@ -18,7 +19,18 @@ LEAF_VALUE_BITS = 16
 LEAF_VALUE_FRAC_BITS = 12
 ADDR_NEXT_TREE_BITS = 14
 
-def write_tree(tree_structure, file, addr_next_tree, is_last_tree, rom_addr):
+if OPTIM:
+    CLASS_ROM_DIR = "../FPGA_VHDL_code_and_data_OPTIM/class_roms"
+    # Number of bits for each field in a non-leaf tree
+    FEATURE_BITS = 4
+    CMP_VALUE_BITS = 8
+    REL_RIGHT_CHILD_BITS = 7
+    # Number of bits for each field in a leaf tree
+    LEAF_VALUE_BITS = 7
+    LEAF_VALUE_FRAC_BITS = 3
+    ADDR_NEXT_TREE_BITS = 13
+
+def write_tree(tree_structure, file, addr_next_tree, is_last_tree, rom_addr, centroids_dict):
     if 'split_index' in tree_structure:
         # It is a non-leaf node
         left_child = tree_structure['left_child']
@@ -32,23 +44,31 @@ def write_tree(tree_structure, file, addr_next_tree, is_last_tree, rom_addr):
         rel_right_child_int = tree_num_nodes(left_child) + 1
         rel_right_child_bin = bin(rel_right_child_int)[2:].zfill(REL_RIGHT_CHILD_BITS)
         node_bin = feature_bin + cmp_value_bin + rel_right_child_bin + '0'
-        node_int = int(node_bin, 2)
-        node_hex = '{:x}'.format(node_int).zfill(8)
+        if OPTIM:
+            node_to_write = node_bin
+        else:
+            node_int = int(node_bin, 2)
+            node_hex = '{:x}'.format(node_int).zfill(8)
+            node_to_write = node_hex
         # Write the node to the file
-        file.write('\t\t\t{} => x"'.format(rom_addr) + node_hex + '",\n')
+        file.write('\t\t\t{} => x"'.format(rom_addr) + node_to_write + '",\n')
         # Continue with the children
-        write_tree(left_child, file, addr_next_tree, is_last_tree, rom_addr + 1)
-        write_tree(right_child, file, addr_next_tree, is_last_tree, rom_addr + rel_right_child_int)
+        write_tree(left_child, file, addr_next_tree, is_last_tree, rom_addr + 1, centroids_dict)
+        write_tree(right_child, file, addr_next_tree, is_last_tree, rom_addr + rel_right_child_int, centroids_dict)
     else:
         # It is a leaf node
         leaf_value = tree_structure['leaf_value']
         # Construct the node
         leaf_value_bin = to_fixed_str(leaf_value, LEAF_VALUE_BITS, LEAF_VALUE_FRAC_BITS)
         node_bin = leaf_value_bin + addr_next_tree + is_last_tree + '1'
-        node_int = int(node_bin, 2)
-        node_hex = '{:x}'.format(node_int).zfill(8)
+        if OPTIM:
+            node_to_write = node_bin
+        else:
+            node_int = int(node_bin, 2)
+            node_hex = '{:x}'.format(node_int).zfill(8)
+            node_to_write = node_hex
         # Write the node to the file
-        file.write('\t\t\t{} => x"'.format(rom_addr) + node_hex + '",\n')
+        file.write('\t\t\t{} => x"'.format(rom_addr) + node_to_write + '",\n')
 
 def main(model_index=0):
 
@@ -106,7 +126,16 @@ def main(model_index=0):
         # class_trees=[group1, group2]
         # final_model=[class_trees]
 
-        # For each class write the trees in a file
+        centroids_dict = None
+        if OPTIM:
+            # Load the centroids dictionary
+            centroids_dict = np.load(K_MEANS_DIR + '/' + image_name + '_centroids.npy', allow_pickle=True)
+            centroids_dict = dict(centroids_dict)
+
+            file_name = CENTROIDS_ROM_DIR+'/{}_rom.txt'.format(image_name)
+            file = open(file_name, 'w')
+            file.truncate(0)
+
         file_name = CLASS_ROM_DIR+'/{}_rom.txt'.format(image_name)
         file = open(file_name, 'w')
         file.truncate(0)
@@ -125,7 +154,7 @@ def main(model_index=0):
                     addr_next_tree += tree_size
                     is_last_tree = '1' if tree is group[-1] else '0'
                     write_tree(tree_structure, file, bin(addr_next_tree)[2:].zfill(ADDR_NEXT_TREE_BITS), 
-                                is_last_tree, rom_addr)
+                                is_last_tree, rom_addr, centroids_dict)
                     rom_addr = addr_next_tree
                 if group is class_trees[0]:
                     initial_addr_2 = rom_addr
