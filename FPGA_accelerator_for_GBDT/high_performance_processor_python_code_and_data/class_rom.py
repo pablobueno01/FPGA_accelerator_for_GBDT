@@ -4,6 +4,9 @@ from __future__ import division, absolute_import, print_function
 from inference_fixed import *
 from ranges import tree_num_nodes
 
+
+OPTIM = False
+
 CLASS_ROM_DIR = "../FPGA_VHDL_code_and_data/class_roms"
 
 # Number of bits for each field in a non-leaf tree
@@ -32,7 +35,7 @@ def write_tree(tree_structure, file, addr_next_tree, is_last_tree, rom_addr):
         node_int = int(node_bin, 2)
         node_hex = '{:x}'.format(node_int).zfill(8)
         # Write the node to the file
-        file.write('\t{} => x"'.format(rom_addr) + node_hex + '",\n')
+        file.write('\t\t\t{} => x"'.format(rom_addr) + node_hex + '",\n')
         # Continue with the children
         write_tree(left_child, file, addr_next_tree, is_last_tree, rom_addr + 1)
         write_tree(right_child, file, addr_next_tree, is_last_tree, rom_addr + rel_right_child_int)
@@ -45,7 +48,7 @@ def write_tree(tree_structure, file, addr_next_tree, is_last_tree, rom_addr):
         node_int = int(node_bin, 2)
         node_hex = '{:x}'.format(node_int).zfill(8)
         # Write the node to the file
-        file.write('\t{} => x"'.format(rom_addr) + node_hex + '",\n')
+        file.write('\t\t\t{} => x"'.format(rom_addr) + node_hex + '",\n')
 
 def main(model_index=0):
 
@@ -104,12 +107,17 @@ def main(model_index=0):
         # final_model=[class_trees]
 
         # For each class write the trees in a file
+        file_name = CLASS_ROM_DIR+'/{}_rom.txt'.format(image_name)
+        file = open(file_name, 'w')
+        file.truncate(0)
+        file.write('begin\n')
         for class_num, class_trees in enumerate(final_model):
-            file_name = CLASS_ROM_DIR+'/{}_class_{}.txt'.format(image_name, class_num)
-            file = open(file_name, 'w')
-            file.truncate(0)
+            file.write('\n\tgen_rom_{}: if SELECT_ROM = {} generate\n'.format(class_num, class_num))
+            file.write('\t\tbank <= (\n')
             addr_next_tree = 0  # Address of the next tree
             rom_addr = 0     # Address of the current tree
+            initial_addr_2 = 0  # Address of the first tree of the second group
+            initial_addr_3 = 0  # Address of the first tree of the third group
             for group in class_trees:
                 for tree in group:
                     tree_structure = tree['tree_structure']
@@ -119,11 +127,30 @@ def main(model_index=0):
                     write_tree(tree_structure, file, bin(addr_next_tree)[2:].zfill(ADDR_NEXT_TREE_BITS), 
                                 is_last_tree, rom_addr)
                     rom_addr = addr_next_tree
-                if group is not class_trees[-1]:
-                    file.write('\n')
-                    print('Initial addr:', rom_addr)
-            print('Class {} written to {}'.format(class_num, file_name))
-            file.close()
+                if group is class_trees[0]:
+                    initial_addr_2 = rom_addr
+                elif group is class_trees[1]:
+                    initial_addr_3 = rom_addr
+            file.write('\t\t\tothers => \'0\'\n')
+            file.write('\t\t);\n')
+            file.write('\t\tinitial_addr_2 <= std_logic_vector(to_unsigned({}, initial_addr_2\'length));\n'.format(initial_addr_2))
+            file.write('\t\tinitial_addr_3 <= std_logic_vector(to_unsigned({}, initial_addr_3\'length));\n'.format(initial_addr_3))
+            file.write('\tend generate gen_rom_{};\n'.format(class_num))
 
+        file.write('\n\tprocess (Clk)\n')
+        file.write('\tbegin\n')
+        file.write('\t\tif rising_edge(Clk) then\n')
+        file.write('\t\t\tif (Re = \'1\') then\n')
+        file.write('\t\t\t\t-- Read from Addr\n')
+        file.write('\t\t\t\tDout <= bank(to_integer(unsigned(Addr)));\n')
+        file.write('\t\t\telse\n')
+        file.write('\t\t\t\tDout <= (others => \'0\');\n')
+        file.write('\t\t\tend if;\n')
+        file.write('\t\tend if;\n')
+        file.write('\tend process;\n')
+        file.write('end Behavioral;\n')
+
+        print('File written:', file_name)
+        file.close()
 if __name__ == "__main__":
     main(model_index=0)
