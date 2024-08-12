@@ -10,13 +10,10 @@ use work.types.all;
 entity image is
     generic(TREE_RAM_BITS: positive := 13;
             -- NUM_CLASSES:   positive := 16;   -- UNCOMMENT FOR IP
-            -- NUM_FEATURES:  positive := 200); -- UNCOMMENT FOR IP
             NUM_CLASSES:   positive := 13;   -- UNCOMMENT FOR KSC
-            NUM_FEATURES:  positive := 176); -- UNCOMMENT FOR KSC
             -- NUM_CLASSES:   positive := 9;   -- UNCOMMENT FOR PU
-            -- NUM_FEATURES:  positive := 103); -- UNCOMMENT FOR PU
             -- NUM_CLASSES:   positive := 16;   -- UNCOMMENT FOR SV
-            -- NUM_FEATURES:  positive := 224); -- UNCOMMENT FOR SV
+            NUM_FEATURES:  positive := 16);
     port(-- Control signals
          Clk:   in std_logic;
          Reset: in std_logic;
