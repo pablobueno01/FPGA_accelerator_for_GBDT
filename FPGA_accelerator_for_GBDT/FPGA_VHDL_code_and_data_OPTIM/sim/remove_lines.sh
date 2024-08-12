@@ -32,6 +32,10 @@ if [ "$start_line" -gt "$end_line" ]; then
 fi
 
 # Remove lines between start line and end line (inclusive)
-sed -i "${start_line},${end_line}d" "$file"
+if [ "$end_line" -eq "$total_lines" ]; then
+    sed -i "${start_line},\$d" "$file"
+else
+    sed -i "${start_line},${end_line}d" "$file"
+fi
 
 echo "Lines between $start_line and $end_line (inclusive) have been removed from '$file'."
