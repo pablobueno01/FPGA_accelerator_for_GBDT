@@ -130,19 +130,20 @@ architecture Behavioral of class is
     -- (t)rees_(d)ata_ram signals
     signal td_addr: std_logic_vector(TREE_RAM_BITS - 1 downto 0);
     -- signal td_din: std_logic_vector(31 downto 0);
-    signal td_dout: std_logic_vector(31 downto 0);
+    signal td_dout: std_logic_vector(21 downto 0);
     signal td_re: std_logic;--signal td_we, td_re: std_logic;
     
     -- (td)_dout_(r)eg signals
-    signal tdr_dout: std_logic_vector(31 downto 0);
+    signal tdr_dout: std_logic_vector(21 downto 0);
     signal tdr_load, tdr_reset: std_logic;
     
     -- [METADATA] Only used when loading the trees
     -- signal last_group_node: std_logic;
     
     -- (T)ree (N)ode data
-    signal tn_feature: std_logic_vector(7 downto 0);
-    signal tn_cmp_value, tn_pred_value: std_logic_vector(15 downto 0);
+    signal tn_feature: std_logic_vector(3 downto 0);
+    signal tn_cmp_value: std_logic_vector(7 downto 0);
+    signal tn_pred_value: std_logic_vector(6 downto 0);
     signal tn_next_tree: std_logic_vector(TREE_RAM_BITS - 1 downto 0);
     signal tn_next_node: std_logic_vector(TREE_RAM_BITS - 1 downto 0);
     signal tn_right_child, addr_jmp: std_logic_vector(6 downto 0);
@@ -235,7 +236,7 @@ begin
     -- RAM where all the trees of the class are located
     trees_data_rom: rom --trees_data_ram: ram
         generic map(ADDRESS_BITS => TREE_RAM_BITS,
-                    DATA_LENGTH => 32,
+                    DATA_LENGTH => 22,
                     SELECT_ROM   => SELECT_ROM)
         port map(Clk  => Clk,
                 --  We   => td_we,
@@ -256,12 +257,12 @@ begin
     -- last_group_node <= td_din(0) and td_din(1) and td_din(2);
     
     -- To get the feature number on stage 2
-    tn_feature <= td_dout(31 downto 24) when td_dout(0) = '0'
+    tn_feature <= td_dout(19 downto 16) when td_dout(0) = '0'
                   else (others => '0');
     
     -- Register to propagate the RAM output to stage 3
     td_dout_reg: reg
-        generic map(BITS => 32)
+        generic map(BITS => 22)
         port map(Clk   => Clk,
                  Reset => tdr_reset,
                  Load  => tdr_load,
@@ -269,12 +270,12 @@ begin
                  Dout  => tdr_dout);
     
     -- Non-leaf node fields
-    tn_cmp_value   <= tdr_dout(23 downto 8);
+    tn_cmp_value   <= tdr_dout(15 downto 8);
     tn_right_child <= tdr_dout(7 downto 1);
     tn_is_leaf     <= tdr_dout(0);
     
     -- Leaf node fields
-    tn_pred_value <= tdr_dout(31 downto 16);
+    tn_pred_value <= tdr_dout(21 downto 15);
     tn_next_tree  <= tdr_dout((TREE_RAM_BITS + 2) - 1  downto 2);
     tn_last_tree  <= tdr_dout(1);
     
@@ -296,7 +297,8 @@ begin
                  Dout  => fr_dout);
     
     -- Feature value comparation
-    cmp_dout <= '0' when (signed(fr_dout) <= signed(tn_cmp_value)) else '1';
+    --cmp_dout <= '0' when (signed(fr_dout) <= signed(tn_cmp_value)) else '1';
+    cmp_dout <= '0' when (unsigned(fr_dout) <= resize(unsigned(tn_cmp_value), fr_dout'length)) else '1';
     
     -- Mux to choose between the two children of the node
     --     left child  --> add 1 to the current address
