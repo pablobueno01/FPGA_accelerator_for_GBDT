@@ -297,7 +297,7 @@ begin
                  Dout  => tdr_dout);
     
     -- Non-leaf node fields
-    tn_cmp_value_addr   <= tdr_dout(15 downto 8);
+    tn_cmp_value_addr   <= td_dout(15 downto 8);    -- To propagate the centroids ROM output to stage 3
     tn_right_child <= tdr_dout(7 downto 1);
     tn_is_leaf     <= tdr_dout(0);
     
