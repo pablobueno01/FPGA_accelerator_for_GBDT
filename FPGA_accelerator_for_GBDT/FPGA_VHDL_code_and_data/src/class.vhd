@@ -296,7 +296,7 @@ begin
                  Dout  => fr_dout);
     
     -- Feature value comparation
-    cmp_dout <= '0' when (signed(fr_dout) <= signed(tn_cmp_value)) else '1';
+    cmp_dout <= '0' when (unsigned(fr_dout) <= unsigned(tn_cmp_value)) else '1';
     
     -- Mux to choose between the two children of the node
     --     left child  --> add 1 to the current address
