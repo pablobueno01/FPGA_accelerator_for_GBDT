@@ -5,10 +5,11 @@ from inference_fixed import *
 from ranges import tree_num_nodes
 
 
-OPTIM = True
+OPTIM = True # Set to True to use the optimized version the FPGA
 
 CLASS_ROM_DIR = "../FPGA_VHDL_code_and_data/class_roms"
 CENTROIDS_ROM_DIR = "../FPGA_VHDL_code_and_data_OPTIM/centroids_roms"
+CENTROIDS_BITS = 13
 
 # Number of bits for each field in a non-leaf tree
 FEATURE_BITS = 8
@@ -30,13 +31,17 @@ if OPTIM:
     LEAF_VALUE_FRAC_BITS = 3
     ADDR_NEXT_TREE_BITS = 13
 
-def write_tree(tree_structure, file, addr_next_tree, is_last_tree, rom_addr, centroids_dict):
+def write_tree(tree_structure, file, addr_next_tree, is_last_tree, rom_addr, centroids_dict, rom_index_dict):
     if 'split_index' in tree_structure:
         # It is a non-leaf node
         left_child = tree_structure['left_child']
         right_child = tree_structure['right_child']
         cmp_value = tree_structure['threshold']
-        cmp_value = int(cmp_value)
+        if OPTIM:
+            centroid = centroids_dict[cmp_value]
+            cmp_value = rom_index_dict[centroid]
+        else:
+            cmp_value = int(cmp_value)
         feature = tree_structure['split_feature']
         # Construct the node
         feature_bin = bin(feature)[2:].zfill(FEATURE_BITS)
@@ -45,16 +50,16 @@ def write_tree(tree_structure, file, addr_next_tree, is_last_tree, rom_addr, cen
         rel_right_child_bin = bin(rel_right_child_int)[2:].zfill(REL_RIGHT_CHILD_BITS)
         node_bin = feature_bin + cmp_value_bin + rel_right_child_bin + '0'
         if OPTIM:
-            node_to_write = node_bin
+            node_to_write = '"00' + node_bin + '"'  # Add two irrelevant bits at the beginning
         else:
             node_int = int(node_bin, 2)
             node_hex = '{:x}'.format(node_int).zfill(8)
-            node_to_write = node_hex
+            node_to_write = 'x"' + node_hex + '"'
         # Write the node to the file
-        file.write('\t\t\t{} => x"'.format(rom_addr) + node_to_write + '",\n')
+        file.write('\t\t\t{} => '.format(rom_addr) + node_to_write + ',\n')
         # Continue with the children
-        write_tree(left_child, file, addr_next_tree, is_last_tree, rom_addr + 1, centroids_dict)
-        write_tree(right_child, file, addr_next_tree, is_last_tree, rom_addr + rel_right_child_int, centroids_dict)
+        write_tree(left_child, file, addr_next_tree, is_last_tree, rom_addr + 1, centroids_dict, rom_index_dict)
+        write_tree(right_child, file, addr_next_tree, is_last_tree, rom_addr + rel_right_child_int, centroids_dict, rom_index_dict)
     else:
         # It is a leaf node
         leaf_value = tree_structure['leaf_value']
@@ -62,13 +67,13 @@ def write_tree(tree_structure, file, addr_next_tree, is_last_tree, rom_addr, cen
         leaf_value_bin = to_fixed_str(leaf_value, LEAF_VALUE_BITS, LEAF_VALUE_FRAC_BITS)
         node_bin = leaf_value_bin + addr_next_tree + is_last_tree + '1'
         if OPTIM:
-            node_to_write = node_bin
+            node_to_write = '"' + node_bin + '"'
         else:
             node_int = int(node_bin, 2)
             node_hex = '{:x}'.format(node_int).zfill(8)
-            node_to_write = node_hex
+            node_to_write = 'x"' + node_hex + '"'
         # Write the node to the file
-        file.write('\t\t\t{} => x"'.format(rom_addr) + node_to_write + '",\n')
+        file.write('\t\t\t{} => '.format(rom_addr) + node_to_write + ',\n')
 
 def main(model_index=0):
 
@@ -127,15 +132,43 @@ def main(model_index=0):
         # final_model=[class_trees]
 
         centroids_dict = None
+        rom_index_dict = None
+        # Write the centroids ROMs
         if OPTIM:
             # Load the centroids dictionary
             centroids_dict = np.load(K_MEANS_DIR + '/' + image_name + '_centroids.npy', allow_pickle=True)
-            centroids_dict = dict(centroids_dict)
+            centroids_dict = dict(centroids_dict)   # Key: cmp_value, Value: centroid
+            rom_index_dict = {centroid: i for i, centroid in enumerate(set(centroids_dict.values()))} # Key: centroid, Value: ROM index
 
-            file_name = CENTROIDS_ROM_DIR+'/{}_rom.txt'.format(image_name)
+            file_name = CENTROIDS_ROM_DIR+'/{}_rom_centroids.txt'.format(image_name)
             file = open(file_name, 'w')
             file.truncate(0)
+            file.write('\nbegin\n')
 
+            file.write('\tbank <= (\n')
+            for i, centroid in enumerate(rom_index_dict.keys()):
+                centroid = int(centroid)
+                centroid_bin = bin(centroid)[2:].zfill(CENTROIDS_BITS)
+                file.write('\t\t{} => "'.format(i) + centroid_bin + '",\n')
+            file.write('\t\tothers => (others => \'0\')\n')
+            file.write('\t);\n')
+
+            file.write('\n\tprocess (Clk)\n')
+            file.write('\tbegin\n')
+            file.write('\t\tif rising_edge(Clk) then\n')
+            file.write('\t\t\tif (Re = \'1\') then\n')
+            file.write('\t\t\t\t-- Read from Addr\n')
+            file.write('\t\t\t\tDout <= bank(to_integer(unsigned(Addr)));\n')
+            file.write('\t\t\telse\n')
+            file.write('\t\t\t\tDout <= (others => \'0\');\n')
+            file.write('\t\t\tend if;\n')
+            file.write('\t\tend if;\n')
+            file.write('\tend process;\n')
+            file.write('end Behavioral;\n')
+
+            print('File written:', file_name)
+
+        # Write the class ROMs
         file_name = CLASS_ROM_DIR+'/{}_rom.txt'.format(image_name)
         file = open(file_name, 'w')
         file.truncate(0)
@@ -154,7 +187,7 @@ def main(model_index=0):
                     addr_next_tree += tree_size
                     is_last_tree = '1' if tree is group[-1] else '0'
                     write_tree(tree_structure, file, bin(addr_next_tree)[2:].zfill(ADDR_NEXT_TREE_BITS), 
-                                is_last_tree, rom_addr, centroids_dict)
+                                is_last_tree, rom_addr, centroids_dict, rom_index_dict)
                     rom_addr = addr_next_tree
                 if group is class_trees[0]:
                     initial_addr_2 = rom_addr
