@@ -146,7 +146,7 @@ def main(model_index=0):
             file.write('\nbegin\n')
 
             file.write('\tbank <= (\n')
-            for i, centroid in enumerate(rom_index_dict.keys()):
+            for centroid, i in rom_index_dict.items():
                 centroid = int(centroid)
                 centroid_bin = bin(centroid)[2:].zfill(CENTROIDS_BITS)
                 file.write('\t\t{} => "'.format(i) + centroid_bin + '",\n')
