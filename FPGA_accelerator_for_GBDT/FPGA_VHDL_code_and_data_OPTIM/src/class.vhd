@@ -37,6 +37,20 @@ architecture Behavioral of class is
     ---------------------------------------------------------------------------
     -- COMPONENTS
     ---------------------------------------------------------------------------
+
+    component rom_centroids is
+        generic(ADDRESS_BITS: positive := 8;
+                DATA_LENGTH:  positive := 13);
+        port(-- Control signals
+             Clk: in std_logic;
+             Re:  in std_logic;
+             
+             -- Input signals
+             Addr: in std_logic_vector (ADDRESS_BITS - 1 downto 0);
+             
+             -- Output
+             Dout: out std_logic_vector (DATA_LENGTH - 1 downto 0));
+    end component;
     
     component reg is
         generic(BITS: positive);
@@ -142,7 +156,9 @@ architecture Behavioral of class is
     
     -- (T)ree (N)ode data
     signal tn_feature: std_logic_vector(3 downto 0);
-    signal tn_cmp_value: std_logic_vector(7 downto 0);
+    signal tn_cmp_value_addr: std_logic_vector(7 downto 0);
+    signal cmp_value: std_logic_vector(12 downto 0);
+    signal read_cmp_value: std_logic;
     signal tn_pred_value: std_logic_vector(6 downto 0);
     signal tn_next_tree: std_logic_vector(TREE_RAM_BITS - 1 downto 0);
     signal tn_next_node: std_logic_vector(TREE_RAM_BITS - 1 downto 0);
@@ -170,6 +186,17 @@ architecture Behavioral of class is
 
 begin
     
+    -- ROM WITH CMP_VALUE CENTROIDS
+
+    read_cmp_value <= '1';
+
+    cmp_centroids_rom: rom_centroids
+        generic map(ADDRESS_BITS => 8, DATA_LENGTH => 13)
+        port map(Clk  => Clk,
+                 Re   => read_cmp_value,
+                 Addr => tn_cmp_value_addr,
+                 Dout => cmp_value);
+
     -- Register to update addr 1
     curr_addr_reg_1: reg
         generic map(BITS => TREE_RAM_BITS)
@@ -270,7 +297,7 @@ begin
                  Dout  => tdr_dout);
     
     -- Non-leaf node fields
-    tn_cmp_value   <= tdr_dout(15 downto 8);
+    tn_cmp_value_addr   <= tdr_dout(15 downto 8);
     tn_right_child <= tdr_dout(7 downto 1);
     tn_is_leaf     <= tdr_dout(0);
     
@@ -297,8 +324,7 @@ begin
                  Dout  => fr_dout);
     
     -- Feature value comparation
-    --cmp_dout <= '0' when (signed(fr_dout) <= signed(tn_cmp_value)) else '1';
-    cmp_dout <= '0' when (unsigned(fr_dout) <= resize(unsigned(tn_cmp_value), fr_dout'length)) else '1';
+    cmp_dout <= '0' when (unsigned(fr_dout) <= resize(unsigned(cmp_value), fr_dout'length)) else '1';
     
     -- Mux to choose between the two children of the node
     --     left child  --> add 1 to the current address

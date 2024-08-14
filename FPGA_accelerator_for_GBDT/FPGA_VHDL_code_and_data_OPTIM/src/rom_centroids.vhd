@@ -6,7 +6,7 @@ library IEEE;
 use IEEE.std_logic_1164.all;
 use IEEE.numeric_std.all;
 
-entity rom is
+entity rom_centroids is
     generic(ADDRESS_BITS: positive := 8;
             DATA_LENGTH:  positive := 13);
     port(-- Control signals
@@ -19,9 +19,9 @@ entity rom is
          -- Output
          Dout: out std_logic_vector (DATA_LENGTH - 1 downto 0));
 
-end rom;
+end rom_centroids;
 
-architecture Behavioral of rom is
+architecture Behavioral of rom_centroids is
 
     type MemoryBank is array(0 to 2**ADDRESS_BITS - 1)
                     of std_logic_vector(DATA_LENGTH - 1 downto 0);
