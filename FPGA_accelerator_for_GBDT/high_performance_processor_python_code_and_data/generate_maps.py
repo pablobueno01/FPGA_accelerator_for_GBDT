@@ -218,6 +218,8 @@ def plot_maps(output_dir, name, shape, num_classes, wl, img, y, pred_map,
     RGB_img = HSI2RGB(wl, img, shape[0], shape[1], 65, 0.002)
     ax1.imshow(RGB_img)
     ax1.set_title("RGB Image")
+    # Save RGB image
+    plt.imsave("./data/{}_RGB.png".format(name), RGB_img)
     
     # GROUND TRUTH GENERATION
     # -------------------------------------------------------------------------
@@ -226,6 +228,8 @@ def plot_maps(output_dir, name, shape, num_classes, wl, img, y, pred_map,
     gt = _map_to_img(y, shape, [(0, 0, 0)] + colours[:num_classes])
     ax2.imshow(gt)
     ax2.set_title("Ground Truth")
+    # Save ground truth
+    plt.imsave("./data/{}_gt.png".format(name), gt)
     
     # PREDICTION MAP GENERATION
     # -------------------------------------------------------------------------
