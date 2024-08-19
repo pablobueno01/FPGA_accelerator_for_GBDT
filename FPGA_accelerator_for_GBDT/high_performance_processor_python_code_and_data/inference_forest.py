@@ -126,6 +126,9 @@ def main(th_acc=0.01):
         print("Training forest with {} models...".format(len(FOREST)))
         for clf in FOREST:
             clf.fit(X_train_k, y_train)
+            # Train each classifier with 80% of the data
+            # train_size = int(0.8 * X_train_k.shape[0]) # Only for the cmp_value optimisation
+            # clf.fit(X_train_k[:train_size], y_train[:train_size])
 
         # Perform inference with forest
         for i in [2, 4, 8, 16]:

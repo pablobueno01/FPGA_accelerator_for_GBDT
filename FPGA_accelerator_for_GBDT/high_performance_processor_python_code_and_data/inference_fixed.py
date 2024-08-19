@@ -481,14 +481,17 @@ def main(th_acc=0, num_models=16):
             # fixed_acc = fixed_accuracy(final_model, X_test_k, y_test, 7, 3)
             # float_acc = float_accuracy(final_model, X_test_k, y_test)
             # print("FLOAT_ACC: {}".format(float_acc))
+            
+            # Only for the cmp_value optimisation
+            train_size = int(0.8 * X_train_k.shape[0]) 
+            fixed_acc = fixed_accuracy(final_model, X_train_k[train_size:], y_train[train_size:], 7, 3)
+            print("FIXED_ACC: {}".format(fixed_acc))
+            # Load the centroids dictionary
+            centroids_dict = np.load(K_MEANS_DIR + '/' + image_name + '_centroids.npy', allow_pickle=True)
+            centroids_dict = dict(centroids_dict)
+            fixed_acc = fixed_accuracy(final_model, X_train_k[train_size:], y_train[train_size:], 7, 3, centroids_dict)
+            print("FIXED_ACC_CLUSTER: {}".format(fixed_acc))
             if model_index == 1:    # 2 iterations
-                fixed_acc = fixed_accuracy(final_model, X_test_k, y_test, 7, 3)
-                print("FIXED_ACC: {}".format(fixed_acc))
-                # Load the centroids dictionary
-                centroids_dict = np.load(K_MEANS_DIR + '/' + image_name + '_centroids.npy', allow_pickle=True)
-                centroids_dict = dict(centroids_dict)
-                fixed_acc = fixed_accuracy(final_model, X_test_k, y_test, 7, 3, centroids_dict)
-                print("FIXED_ACC_CLUSTER: {}".format(fixed_acc))
                 break
             #print("VISITED_NODES: {} ({} avg.)".format(visited_nodes, avg_nodes))
             #print("USED_CYCLES: {} ({} avg.)".format(used_cycles, avg_cycles))
