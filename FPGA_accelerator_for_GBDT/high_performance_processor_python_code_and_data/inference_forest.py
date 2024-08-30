@@ -13,12 +13,12 @@ param_ranges = {
     'max_depth': range(5, 8),
     'n_estimators': range(75, 251),
     'min_child_samples': range(10, 31),
-    'subsample': [0.6, 0.7, 0.8, 0.9],
+    'subsample': [0.7, 0.8, 0.9],
     'subsample_freq': [1, 2, 3],
     'learning_rate': [0.05, 0.1, 0.2],
     'reg_alpha': [0.0, 0.1, 0.2],
     'reg_lambda': [0.0, 0.1, 0.2],
-    'colsample_bytree': [0.7, 0.8, 0.9, 1.0],
+    'colsample_bytree': [0.8, 0.9, 1.0],
 }
 
 # Generate random parameter combinations
