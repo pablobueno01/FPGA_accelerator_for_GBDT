@@ -190,15 +190,12 @@ def plot_maps(output_dir, name, shape, num_classes, wl, img, y, pred_map,
     if name=="indian_pines_corrected":
         fig, ((ax1, ax2), (ax3, ax4)) = plt.subplots(2, 2)
         fig.set_size_inches(8*shape[1]/96, 8*shape[0]/96)
-        plt.subplots_adjust(wspace=0.2, hspace=0.2)
     elif name=="KSC":
         fig, ((ax1, ax2), (ax3, ax4)) = plt.subplots(2, 2)
         fig.set_size_inches(2*shape[1]/96, 2*shape[0]/96)
-        plt.subplots_adjust(wspace=0.2, hspace=0.2)
     else:
-        fig, (ax1, ax2, ax3, ax4) = plt.subplots(1, 4)
-        fig.set_size_inches(4*shape[1]/96, shape[0]/96)
-        plt.subplots_adjust(wspace=0.2)
+        fig, ((ax1, ax2), (ax3, ax4)) = plt.subplots(2, 2)
+        fig.set_size_inches(4*shape[1]/96, 4*shape[0]/96)
     
     # Remove axis
     ax1.set_axis_off()
@@ -221,7 +218,7 @@ def plot_maps(output_dir, name, shape, num_classes, wl, img, y, pred_map,
     # Create and show RGB image (D65 illuminant and 0.002 threshold)
     RGB_img = HSI2RGB(wl, img, shape[0], shape[1], 65, 0.002)
     ax1.imshow(RGB_img)
-    ax1.set_title("RGB Image")
+    #ax1.set_title("RGB Image")
     # Save RGB image
     # plt.imsave("./data/{}_RGB.png".format(name), RGB_img)
     
@@ -231,7 +228,7 @@ def plot_maps(output_dir, name, shape, num_classes, wl, img, y, pred_map,
     # Generate and show coloured ground truth
     gt = _map_to_img(y, shape, [(0, 0, 0)] + colours[:num_classes])
     ax2.imshow(gt)
-    ax2.set_title("Ground Truth")
+    #ax2.set_title("Ground Truth")
     # Save ground truth
     plt.imsave("./data/{}_gt.png".format(name), gt)
     
@@ -241,7 +238,7 @@ def plot_maps(output_dir, name, shape, num_classes, wl, img, y, pred_map,
     # Generate and show coloured prediction map
     pred_H_img = _map_to_img(pred_map, shape, colours[:num_classes])
     ax3.imshow(pred_H_img)
-    ax3.set_title("Prediction Map")
+    #ax3.set_title("Prediction Map")
     
     # UNCERTAINTY MAP GENERATION
     # -------------------------------------------------------------------------
@@ -262,7 +259,7 @@ def plot_maps(output_dir, name, shape, num_classes, wl, img, y, pred_map,
 
     H_img = _map_to_img(u_map, shape, gradient_colours)
     ax4.imshow(H_img)
-    ax4.set_title("Uncertainty Map")
+    #ax4.set_title("Uncertainty Map")
 
     # Create the custom colormap
     gradient_colours = [(r/255, g/255, b/255) for r, g, b in gradient_colours]
