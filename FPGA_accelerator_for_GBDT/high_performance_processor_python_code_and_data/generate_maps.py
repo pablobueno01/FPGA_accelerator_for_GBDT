@@ -42,7 +42,7 @@ def _uncertainty_to_map(uncertainty, num_classes, slots=0, max_H=0):
     # Actualise `slots` in case of the default value
     if slots == 0:
         slots = int(max_H * 10)
-    
+
     # Prepare output structures and ranges
     u_map = np.zeros(uncertainty.shape, dtype="int")
     ranges = np.linspace(0.0, max_H, num=slots+1)
@@ -245,13 +245,18 @@ def plot_maps(output_dir, name, shape, num_classes, wl, img, y, pred_map,
     # Create uncertainty map
     u_map, labels = _uncertainty_to_map(H_map, num_classes, slots=slots,
                                         max_H=max_H)
-    
+
     # Generate and show coloured uncertainty map
     if max_H == 0:
-        max_H = np.ceil(np.max(u_map) * 10) / 10
+        max_H = np.ceil(np.max(H_map) * 10) / 10
     if slots == 0:
         slots = int(max_H * 10)
-    H_img = _map_to_img(u_map, shape, gradients[:slots])
+
+    # Calculate the equidistant indexes to select the gradient colours
+    indexes = [int(i * (len(gradients) - 1) / (slots - 1)) for i in range(slots)]
+    gradient_colours = [gradients[i] for i in indexes]
+
+    H_img = _map_to_img(u_map, shape, gradient_colours)
     ax4.imshow(H_img)
     ax4.set_title("Uncertainty Map")
     
