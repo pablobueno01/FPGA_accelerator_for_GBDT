@@ -219,7 +219,7 @@ def plot_maps(output_dir, name, shape, num_classes, wl, img, y, pred_map,
     ax1.imshow(RGB_img)
     ax1.set_title("RGB Image")
     # Save RGB image
-    plt.imsave("./data/{}_RGB.png".format(name), RGB_img)
+    # plt.imsave("./data/{}_RGB.png".format(name), RGB_img)
     
     # GROUND TRUTH GENERATION
     # -------------------------------------------------------------------------
