@@ -4,7 +4,8 @@ from __future__ import division
 from inference_reduced import *
 from perform_analysis import *
 from HSI2RGB import HSI2RGB
-
+from matplotlib.colors import LinearSegmentedColormap
+from mpl_toolkits.axes_grid1 import make_axes_locatable
 MAPS_DIR = "maps"
 
 # MAP FUNCTIONS
@@ -189,12 +190,15 @@ def plot_maps(output_dir, name, shape, num_classes, wl, img, y, pred_map,
     if name=="indian_pines_corrected":
         fig, ((ax1, ax2), (ax3, ax4)) = plt.subplots(2, 2)
         fig.set_size_inches(8*shape[1]/96, 8*shape[0]/96)
+        plt.subplots_adjust(wspace=0.2, hspace=0.2)
     elif name=="KSC":
         fig, ((ax1, ax2), (ax3, ax4)) = plt.subplots(2, 2)
         fig.set_size_inches(2*shape[1]/96, 2*shape[0]/96)
+        plt.subplots_adjust(wspace=0.2, hspace=0.2)
     else:
         fig, (ax1, ax2, ax3, ax4) = plt.subplots(1, 4)
         fig.set_size_inches(4*shape[1]/96, shape[0]/96)
+        plt.subplots_adjust(wspace=0.2)
     
     # Remove axis
     ax1.set_axis_off()
@@ -259,6 +263,35 @@ def plot_maps(output_dir, name, shape, num_classes, wl, img, y, pred_map,
     H_img = _map_to_img(u_map, shape, gradient_colours)
     ax4.imshow(H_img)
     ax4.set_title("Uncertainty Map")
+
+    # Create the custom colormap
+    gradient_colours = [(r/255, g/255, b/255) for r, g, b in gradient_colours]
+    cmap = LinearSegmentedColormap.from_list('custom_cmap', gradient_colours, N=256)
+
+    # Create the colorbar outside
+    divider = make_axes_locatable(ax1)
+    cax = divider.append_axes("right", size="5%", pad=0.05)
+    cax.axis('off')  # Make the colorbar invisible
+    divider = make_axes_locatable(ax2)
+    cax = divider.append_axes("right", size="5%", pad=0.05)
+    cax.axis('off')  # Make the colorbar invisible
+    divider = make_axes_locatable(ax3)
+    cax = divider.append_axes("right", size="5%", pad=0.05)
+    cax.axis('off')  # Make the colorbar invisible
+    divider = make_axes_locatable(ax4)
+    cax = divider.append_axes("right", size="5%", pad=0.05)
+
+    # Create a ScalarMappable object to add the colorbar
+    norm = plt.Normalize(0.0, max_H)  # Normaliza el rango de valores de la barra de colores
+    sm = plt.cm.ScalarMappable(cmap=cmap, norm=norm)
+    sm.set_array([]) 
+
+    # Add the colorbar to the plot
+    cbar = plt.colorbar(sm, cax=cax)
+
+    # Configure the colorbar
+    cbar.set_ticks([0.0, max_H])  # Add ticks
+    cbar.set_ticklabels(['0.0', '{:.1f}'.format(max_H)])  # Add labels
     
     # PLOT COMBINED IMAGE
     # -------------------------------------------------------------------------
