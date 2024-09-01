@@ -21,17 +21,6 @@ LEAF_VALUE_BITS = 16
 LEAF_VALUE_FRAC_BITS = 12
 ADDR_NEXT_TREE_BITS = 14
 
-if OPTIM:
-    CLASS_ROM_DIR = "../FPGA_VHDL_code_and_data_OPTIM/class_roms"
-    # Number of bits for each field in a non-leaf tree
-    FEATURE_BITS = 4
-    CMP_VALUE_BITS = 8
-    REL_RIGHT_CHILD_BITS = 7
-    # Number of bits for each field in a leaf tree
-    LEAF_VALUE_BITS = 7
-    LEAF_VALUE_FRAC_BITS = 3
-    ADDR_NEXT_TREE_BITS = 13
-
 def write_tree(tree_structure, file, addr_next_tree, is_last_tree, rom_addr, centroids_dict, rom_index_dict):
     if 'split_index' in tree_structure:
         # It is a non-leaf node
@@ -223,4 +212,14 @@ if __name__ == "__main__":
         print("Using the non-optimized version")
         OPTIM = False
 
+    if OPTIM:
+        CLASS_ROM_DIR = "../FPGA_VHDL_code_and_data_OPTIM/class_roms"
+        # Number of bits for each field in a non-leaf tree
+        FEATURE_BITS = 4
+        CMP_VALUE_BITS = 8
+        REL_RIGHT_CHILD_BITS = 7
+        # Number of bits for each field in a leaf tree
+        LEAF_VALUE_BITS = 7
+        LEAF_VALUE_FRAC_BITS = 3
+        ADDR_NEXT_TREE_BITS = 13
     main(model_index=1)
