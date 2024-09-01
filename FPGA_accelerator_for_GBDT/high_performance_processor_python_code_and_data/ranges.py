@@ -131,8 +131,13 @@ def main():
         ordered_forest = get_ordered_forest(trained_forest, num_classes)
 
         hist = {}
+        min_cmp_value = float('inf')
+        max_cmp_value = float('-inf')
+        min_leaf = float('inf')
+        max_leaf = float('-inf')
+        max_rel_right = 0
         for model_index, ordered_model in enumerate(ordered_forest):
-            print("\nModel {}".format(model_index))
+            #print("\nModel {}".format(model_index))
             # For each class
             #     - Keep only the number of trees that fit in the architecture
             #     - Separate them into three groups per class
@@ -161,35 +166,35 @@ def main():
                 
                 final_model.append(class_selected_trees)
 
-            min_cmp_value = float('inf')
-            max_cmp_value = float('-inf')
-            min_leaf = float('inf')
-            max_leaf = float('-inf')
-            max_rel_right = 0
+            
             for class_num, class_trees in enumerate(final_model):
                 for group in class_trees:
                     for tree in group:
                         tree_structure = tree['tree_structure']
-                        # tree_min_cmp_value, tree_max_cmp_value = min_max_cmp_value(tree_structure)
-                        # if tree_min_cmp_value < min_cmp_value:
-                        #     min_cmp_value = tree_min_cmp_value
-                        # if tree_max_cmp_value > max_cmp_value:
-                        #     max_cmp_value = tree_max_cmp_value
-                        # m = max_rel_right_child(tree_structure)
-                        # if m > max_rel_right:
-                        #     max_rel_right = m
-                        # tree_min_leaf, tree_max_leaf = min_max_leaf_value(tree_structure)
-                        # if tree_min_leaf < min_leaf:
-                        #     min_leaf = tree_min_leaf
-                        # if tree_max_leaf > max_leaf:
-                        #     max_leaf = tree_max_leaf
-                        cmp_value_hist(tree_structure, hist)
 
-            # print("Minimum value of cmp_value: {}".format(min_cmp_value))
-            # print("Maximum value of cmp_value: {}".format(max_cmp_value))
-            # print("Maximum value of rel_right_child: {}".format(max_rel_right))
-            # print("Minimum value of leaf_value: {}".format(min_leaf))
-            # print("Maximum value of leaf_value: {}".format(max_leaf))
+                        tree_min_cmp_value, tree_max_cmp_value = min_max_cmp_value(tree_structure)
+                        if tree_min_cmp_value < min_cmp_value:
+                            min_cmp_value = tree_min_cmp_value
+                        if tree_max_cmp_value > max_cmp_value:
+                            max_cmp_value = tree_max_cmp_value
+
+                        m = max_rel_right_child(tree_structure)
+                        if m > max_rel_right:
+                            max_rel_right = m
+
+                        tree_min_leaf, tree_max_leaf = min_max_leaf_value(tree_structure)
+                        if tree_min_leaf < min_leaf:
+                            min_leaf = tree_min_leaf
+                        if tree_max_leaf > max_leaf:
+                            max_leaf = tree_max_leaf
+
+                        cmp_value_hist(tree_structure, hist) # hist: (key: cmp_value, value: count)
+
+        print("Minimum value of cmp_value: {}".format(min_cmp_value))
+        print("Maximum value of cmp_value: {}".format(max_cmp_value))
+        print("Maximum value of rel_right_child: {}".format(max_rel_right))
+        print("Minimum value of leaf_value: {}".format(min_leaf))
+        print("Maximum value of leaf_value: {}".format(max_leaf))
         #print("Unique values of cmp_value: {}".format(len(np.unique(hist))))
 
         # Perform K-means clustering
@@ -202,7 +207,7 @@ def main():
 
         # Get a new histogram with the centroids
         centroids = kmeans.cluster_centers_.flatten()
-        new_hist = {}
+        new_hist = {}   # new_hist: (key: cmp_value, value: centroid)
         for key in hist.keys():
             cluster_label = kmeans.predict([[key]])[0]
             new_hist[key] = centroids[cluster_label]
