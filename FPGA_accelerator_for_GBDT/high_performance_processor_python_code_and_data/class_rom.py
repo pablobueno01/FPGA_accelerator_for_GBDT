@@ -3,9 +3,10 @@
 from __future__ import division, absolute_import, print_function
 from inference_fixed import *
 from ranges import tree_num_nodes
+import sys
 
 
-OPTIM = True # Set to True to use the optimized version the FPGA
+OPTIM = False # Set to True to use the optimized version the FPGA
 
 CLASS_ROM_DIR = "../FPGA_VHDL_code_and_data/class_roms"
 CENTROIDS_ROM_DIR = "../FPGA_VHDL_code_and_data_OPTIM/centroids_roms"
@@ -215,4 +216,11 @@ def main(model_index=0):
         print('File written:', file_name)
         file.close()
 if __name__ == "__main__":
-    main(model_index=0)
+    if len(sys.argv) > 1 and sys.argv[1] == "o":
+        print("Using the optimized version")
+        OPTIM = True
+    else:
+        print("Using the non-optimized version")
+        OPTIM = False
+
+    main(model_index=1)
