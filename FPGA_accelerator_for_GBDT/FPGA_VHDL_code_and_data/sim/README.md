@@ -29,3 +29,16 @@ As an example, "./select_classes.sh 5 KSC_test.vhd" will keep uncommented all
 the pixels of class 5 in the file "KSC_test.vhd". To perform the entire test on
 vivado you will need to do this for every class and execute them one by one.
 
+## select_classes_all.sh
+
+This file does the same as select_classes.sh but with all the files.
+
+    USE: ./select_classes_all.sh <num_class>
+
+Also, if <num_class> is -1, it selects all the classes.
+
+## remove_lines.sh
+
+This files remove all the lines of file <file> between <start_line> and <end_line> (both included). <end_line> by deafult is the last line of the file.
+
+    USE: ./remove_lines.sh <file> <start_line> [<end_line>]

@@ -18,7 +18,7 @@ This file contains the entity "class", wich corresponds to the manager of the
 execution of the trees of one class.
 
 ## active_demux.vhd, comparator_2_32b.vhd, comparator_16_32b.vhd, counter.vhd,
-## mux.vhd, ram.vhd, reg.vhd
+## mux.vhd, rom.vhd, reg.vhd
 
 These files are the used components.
 
@@ -27,4 +27,10 @@ These files are the used components.
 This file implements the function "log_2" used to get the number of bits needed
 to generate a signal capable of address a number of elements (like the number
 address bits needed in a memory with N addresses).
+
+## write_rom.sh
+
+This script initializes the ROM in rom.vhd with the content in ../class_roms/<file>_rom.txt.
+
+Execution: ./write_rom.sh <file>
 

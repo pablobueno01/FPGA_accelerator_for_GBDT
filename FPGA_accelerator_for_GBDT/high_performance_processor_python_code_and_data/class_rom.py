@@ -6,7 +6,7 @@ from ranges import tree_num_nodes
 import sys
 
 
-OPTIM = False # Set to True to use the optimized version the FPGA
+OPTIM = False
 
 CLASS_ROM_DIR = "../FPGA_VHDL_code_and_data/class_roms"
 CENTROIDS_ROM_DIR = "../FPGA_VHDL_code_and_data_OPTIM/centroids_roms"

@@ -23,9 +23,11 @@ This directory contains the VHDL codes of the accelerator itself ("src" director
 
 If you want to execute the VHDL code into an FPGA, then you will need to define your block design along with your communications (we used an AXI stream to send both, the nodes of the trees and the features of the pixels, and then an AXI little to get the prediction results). Analyze the structure of the VHDL test files could help you to better understand the "image.vhd" and the "class.vhd" state machines, which is necessary to know how to send the data.
 
-## embedded_system_c_code_and_data
+Update: This accelerator has been modified. Now it does not use RAMs, but ROMs that can be charged with a script.
 
-This directory contains the c program and the formatted data to perform the inference of the test pixels of every analyzed image in the CPU of an embedded device.
+## FPGA_VHDL_code_and_data_OPTIM
+
+This is an optimized version of the previous accelerator. The memory format of the nodes has been reduced.
 
 ## high_performance_processor_python_code_and_data
 
